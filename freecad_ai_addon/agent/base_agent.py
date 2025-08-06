@@ -228,6 +228,48 @@ class BaseAgent(ABC):
         start_time = time.time()
         
         try:
+            # Import safety controller here to avoid circular imports
+            from .safety_control import AgentSafetyController, SafetyLevel
+            
+            # Initialize safety controller if not exists
+            if not hasattr(self, '_safety_controller'):
+                self._safety_controller = AgentSafetyController(SafetyLevel.MEDIUM)
+            
+            # Check if operations are allowed
+            if not self._safety_controller.is_operation_allowed():
+                return TaskResult(
+                    status=TaskStatus.FAILED,
+                    error_message="Agent operations are currently paused or in manual control"
+                )
+            
+            # Validate operation safety
+            safety_result = self._safety_controller.validate_operation(task, task.context)
+            if not safety_result.passed:
+                error_msg = "; ".join(safety_result.errors)
+                return TaskResult(
+                    status=TaskStatus.FAILED,
+                    error_message=f"Safety validation failed: {error_msg}"
+                )
+            
+            # Require user confirmation for risky operations
+            if not self._safety_controller.require_user_confirmation(task, safety_result, task.context):
+                return TaskResult(
+                    status=TaskStatus.CANCELLED,
+                    error_message="Operation cancelled by user"
+                )
+            
+            # Check resource limits
+            if not self._safety_controller.check_resource_limits(task):
+                return TaskResult(
+                    status=TaskStatus.FAILED,
+                    error_message="Resource limits exceeded"
+                )
+            
+            # Create rollback point for critical operations
+            rollback_id = None
+            if safety_result.risk_level.value in ["high_risk", "destructive"]:
+                rollback_id = self._safety_controller.setup_rollback_point(task.id, task.context)
+            
             # Pre-execution validation
             if not self.pre_execute_validation(task):
                 return TaskResult(
@@ -243,6 +285,13 @@ class BaseAgent(ABC):
             result = self.execute_task(task)
             result.execution_time = time.time() - start_time
             
+            # If task failed and we have a rollback point, offer rollback
+            if result.status == TaskStatus.FAILED and rollback_id:
+                if self._should_rollback(task, result):
+                    if self._safety_controller.execute_rollback(rollback_id):
+                        result.error_message += " (Changes rolled back)"
+                        self.logger.info(f"Rolled back failed operation: {task.id}")
+            
             # Post-execution cleanup
             self.post_execute_cleanup(task, result)
             
@@ -252,6 +301,14 @@ class BaseAgent(ABC):
             execution_time = time.time() - start_time
             self.logger.error(f"Task {task.id} failed with exception: {str(e)}")
             
+            # Attempt rollback if we have a rollback point
+            if 'rollback_id' in locals() and rollback_id:
+                try:
+                    self._safety_controller.execute_rollback(rollback_id)
+                    self.logger.info(f"Rolled back after exception: {task.id}")
+                except Exception as rollback_error:
+                    self.logger.error(f"Rollback failed: {str(rollback_error)}")
+            
             result = TaskResult(
                 status=TaskStatus.FAILED,
                 error_message=str(e),
@@ -260,6 +317,28 @@ class BaseAgent(ABC):
             
             self.post_execute_cleanup(task, result)
             return result
+    
+    def _should_rollback(self, task: AgentTask, result: TaskResult) -> bool:
+        """
+        Determine if rollback should be performed after a failed task.
+        
+        Args:
+            task: Failed task
+            result: Task result
+            
+        Returns:
+            True if rollback should be performed
+        """
+        # Rollback for geometry operations that failed
+        if task.task_type in [TaskType.GEOMETRY_CREATION, TaskType.GEOMETRY_MODIFICATION]:
+            return True
+        
+        # Rollback for destructive operations
+        destructive_operations = ['boolean_difference', 'remove_object']
+        if any(op in task.description.lower() for op in destructive_operations):
+            return True
+        
+        return False
     
     def _get_timestamp(self) -> str:
         """Get current timestamp as ISO string"""
