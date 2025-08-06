@@ -17,6 +17,7 @@ except ImportError:
     Sketcher = None
 
 from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
+from .sketch_action_library import SketchActionLibrary
 
 logger = logging.getLogger(__name__)
 
@@ -31,31 +32,15 @@ class SketchAgent(BaseAgent):
     
     def __init__(self):
         super().__init__("SketchAgent", "sketch")
-        self.capabilities = [
-            TaskType.SKETCH_CREATION,
-            TaskType.SKETCH_MODIFICATION
-        ]
+        self.description = "Specialized agent for 2D sketch creation and constraint management"
         
-        # Register supported sketch operations
-        self.supported_operations = {
-            "create_sketch": self._create_sketch,
-            "add_line": self._add_line,
-            "add_rectangle": self._add_rectangle,
-            "add_circle": self._add_circle,
-            "add_arc": self._add_arc,
-            "add_point": self._add_point,
-            "add_constraint_horizontal": self._add_constraint_horizontal,
-            "add_constraint_vertical": self._add_constraint_vertical,
-            "add_constraint_parallel": self._add_constraint_parallel,
-            "add_constraint_perpendicular": self._add_constraint_perpendicular,
-            "add_constraint_equal": self._add_constraint_equal,
-            "add_constraint_coincident": self._add_constraint_coincident,
-            "add_constraint_distance": self._add_constraint_distance,
-            "add_constraint_radius": self._add_constraint_radius,
-            "add_constraint_angle": self._add_constraint_angle,
-            "close_sketch": self._close_sketch,
-            "fully_constrain": self._fully_constrain_sketch
-        }
+        # Initialize sketch action library
+        self.sketch_action_library = SketchActionLibrary()
+        
+        # Initialize decision engine (will be set by agent framework)
+        self.decision_engine = None
+        
+        # Register supported operations
         
         # Constraint type mapping
         self.constraint_types = {

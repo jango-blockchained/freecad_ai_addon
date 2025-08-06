@@ -17,6 +17,7 @@ except ImportError:
     Draft = None
 
 from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
+from .action_library import ActionLibrary
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +32,15 @@ class GeometryAgent(BaseAgent):
     
     def __init__(self):
         super().__init__("GeometryAgent", "geometry")
-        self.capabilities = [
-            TaskType.GEOMETRY_CREATION,
-            TaskType.GEOMETRY_MODIFICATION
-        ]
+        self.description = "Specialized agent for 3D geometric operations and part design"
         
-        # Register supported geometric operations
+        # Initialize action library
+        self.action_library = ActionLibrary()
+        
+        # Initialize decision engine (will be set by agent framework)
+        self.decision_engine = None
+        
+        # Register supported operations
         self.supported_operations = {
             "create_box": self._create_box,
             "create_cylinder": self._create_cylinder,
@@ -48,12 +52,8 @@ class GeometryAgent(BaseAgent):
             "boolean_intersection": self._boolean_intersection,
             "add_fillet": self._add_fillet,
             "add_chamfer": self._add_chamfer,
-            "mirror_object": self._mirror_object,
-            "array_linear": self._array_linear,
-            "array_polar": self._array_polar,
-            "scale_object": self._scale_object,
-            "rotate_object": self._rotate_object,
-            "translate_object": self._translate_object
+            "create_pattern": self._create_pattern,
+            "mirror_object": self._mirror_object
         }
     
     def can_handle_task(self, task: AgentTask) -> bool:
@@ -94,6 +94,49 @@ class GeometryAgent(BaseAgent):
         # Add more validation as needed
         return True
     
+    def make_intelligent_decision(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Use decision engine to make intelligent design decisions
+        
+        Args:
+            request: Design request with geometry info and context
+            
+        Returns:
+            Decision result with recommendations and execution plan
+        """
+        if self.decision_engine:
+            return self.decision_engine.make_design_decision(request)
+        else:
+            # Fallback when decision engine not available
+            return {
+                "success": False,
+                "error": "Decision engine not initialized",
+                "recommendations": ["Manual design decisions required"]
+            }
+    
+    def handle_operation_error(self, operation: str, error: Exception, 
+                              context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Handle operation errors using intelligent recovery
+        
+        Args:
+            operation: Name of the failed operation
+            error: Exception that occurred
+            context: Operation context
+            
+        Returns:
+            List of recovery strategies
+        """
+        if self.decision_engine:
+            return self.decision_engine.handle_operation_error(operation, error, context)
+        else:
+            # Fallback recovery strategies
+            return [{
+                "strategy": "retry_operation",
+                "description": "Retry the operation",
+                "success_probability": 0.3
+            }]
+
     def execute_task(self, task: AgentTask) -> TaskResult:
         """Execute the geometric task."""
         operation = task.parameters.get('operation')

@@ -18,6 +18,7 @@ except ImportError:
     Mesh = None
 
 from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
+from .analysis_action_library import AnalysisActionLibrary
 
 logger = logging.getLogger(__name__)
 
@@ -37,23 +38,29 @@ class AnalysisAgent(BaseAgent):
             TaskType.VALIDATION
         ]
         
+        # Initialize analysis action library
+        self.analysis_action_library = AnalysisActionLibrary()
+        
+        # Initialize decision engine (will be set by agent framework)
+        self.decision_engine = None
+        
         # Register supported analysis operations
         self.supported_operations = {
             "geometric_properties": self._analyze_geometric_properties,
-            "mass_properties": self._analyze_mass_properties,
-            "mesh_analysis": self._analyze_mesh_quality,
-            "printability_analysis": self._analyze_3d_printability,
-            "structural_analysis": self._analyze_structural_properties,
+            "mass_properties": self._mass_properties,
+            "mesh_analysis": self._mesh_analysis,
+            "printability_analysis": self._printability_analysis,
+            "structural_analysis": self._structural_analysis,
             "validate_geometry": self._validate_geometry,
             "check_intersections": self._check_intersections,
             "measure_distance": self._measure_distance,
             "measure_angle": self._measure_angle,
-            "surface_area_analysis": self._analyze_surface_area,
-            "volume_analysis": self._analyze_volume,
-            "cross_section_analysis": self._analyze_cross_section,
-            "draft_angle_analysis": self._analyze_draft_angles,
-            "undercut_analysis": self._analyze_undercuts,
-            "wall_thickness_analysis": self._analyze_wall_thickness
+            "surface_area_analysis": self._surface_area_analysis,
+            "volume_analysis": self._volume_analysis,
+            "cross_section_analysis": self._cross_section_analysis,
+            "draft_angle_analysis": self._draft_angle_analysis,
+            "undercut_analysis": self._undercut_analysis,
+            "wall_thickness_analysis": self._wall_thickness_analysis
         }
     
     def can_handle_task(self, task: AgentTask) -> bool:
