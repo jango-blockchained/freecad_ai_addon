@@ -3,7 +3,7 @@ Task Planner for FreeCAD AI Addon Agent Framework.
 Coordinates multi-step operations and agent communication.
 """
 
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import logging

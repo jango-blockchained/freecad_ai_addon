@@ -14,7 +14,7 @@ except ImportError:
     App = None
     Gui = None
 
-from .base_agent import AgentTask, TaskResult, TaskStatus, TaskType
+from .base_agent import AgentTask, TaskResult, TaskStatus
 from .geometry_agent import GeometryAgent
 from .sketch_agent import SketchAgent
 from .analysis_agent import AnalysisAgent

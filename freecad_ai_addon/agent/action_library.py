@@ -1,14 +1,10 @@
 """
-FreeCAD Action Library for AI Addon.
-
-Comprehensive library of high-level FreeCAD operations that can be executed
-by AI agents. Provides parametric modeling, feature creation, and advanced
-geometric operations with built-in validation and error handling.
+Advanced Action Library for FreeCAD AI Addon
+Provides structured actions for geometry, sketching, and analysis operations.
 """
 
 from typing import Dict, Any, List, Optional, Tuple, Union
 import logging
-import math
 
 try:
     import FreeCAD as App

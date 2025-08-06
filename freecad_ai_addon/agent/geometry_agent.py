@@ -3,7 +3,7 @@ Geometry Agent for FreeCAD AI Addon.
 Handles geometric operations like creating and modifying 3D objects.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 import logging
 
 try:
@@ -16,7 +16,7 @@ except ImportError:
     Part = None
     Draft = None
 
-from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
+from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus
 from .action_library import ActionLibrary
 
 logger = logging.getLogger(__name__)

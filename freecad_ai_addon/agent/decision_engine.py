@@ -14,9 +14,7 @@ License: MIT
 """
 
 import logging
-import math
-import json
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 import time
@@ -27,8 +25,6 @@ logger = logging.getLogger(__name__)
 # Try to import FreeCAD, provide graceful fallback
 try:
     import FreeCAD
-    import Part
-    import Sketcher
     FREECAD_AVAILABLE = True
 except ImportError:
     logger.warning("FreeCAD not available. Decision engine will run in simulation mode.")
@@ -430,7 +426,7 @@ class ConstraintSolverIntegration:
                                 "geometry2": idx2,
                                 "point2": pt2_type,
                                 "confidence": 0.8,
-                                "description": f"Points appear coincident"
+                                "description": "Points appear coincident"
                             })
             
             return suggestions

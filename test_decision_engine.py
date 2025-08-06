@@ -99,7 +99,7 @@ def test_constraint_solver():
     # Test constraint analysis (will work without FreeCAD in simulation mode)
     analysis = solver.analyze_sketch_constraints("TestSketch")
     
-    print(f"✓ Constraint analysis completed")
+    print("✓ Constraint analysis completed")
     print(f"  - Degrees of freedom: {analysis['degrees_of_freedom']}")
     print(f"  - Missing constraints: {len(analysis['missing_constraints'])}")
     print(f"  - Suggestions: {len(analysis['suggestions'])}")
@@ -132,7 +132,7 @@ def test_optimization_engine():
         constraints
     )
     
-    print(f"✓ Weight optimization completed")
+    print("✓ Weight optimization completed")
     print(f"  - Objective value: {result.objective_value:.2f}")
     print(f"  - Iterations: {result.iterations}")
     print(f"  - Constraints satisfied: {result.constraints_satisfied}")
@@ -145,7 +145,7 @@ def test_optimization_engine():
         parameters
     )
     
-    print(f"✓ Strength optimization completed")
+    print("✓ Strength optimization completed")
     print(f"  - Section modulus: {strength_result.objective_value:.2f}")
     print(f"  - Optimized parameters: {strength_result.parameters}")
 
@@ -319,7 +319,7 @@ def test_full_decision_engine():
     
     # Get performance summary
     performance = engine.get_performance_summary()
-    print(f"\n--- Performance Summary ---")
+    print("\n--- Performance Summary ---")
     print(f"  - Total decisions: {performance['total_decisions']}")
     print(f"  - Success rate: {performance['success_rate']:.1f}%")
     print(f"  - Patterns per decision: {performance['average_patterns_per_decision']:.1f}")

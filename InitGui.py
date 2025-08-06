@@ -13,9 +13,7 @@ from freecad_ai_addon.integration.workbench import AIWorkbench
 def Initialize():
     """Initialize the AI Workbench and register it with FreeCAD"""
     try:
-        # Import and register commands first
-        from freecad_ai_addon.commands import provider_commands
-        
+        # Commands are imported through workbench
         # Register the AI Workbench
         Gui.addWorkbench(AIWorkbench())
         App.Console.PrintMessage("FreeCAD AI Addon: Workbench registered successfully\n")

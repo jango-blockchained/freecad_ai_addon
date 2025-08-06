@@ -8,14 +8,14 @@ for geometric operations, sketch management, and analysis.
 import sys
 import os
 
+from freecad_ai_addon.agent.action_library import ActionLibrary
+from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+from freecad_ai_addon.agent.analysis_action_library import AnalysisActionLibrary
+
 # Add the addon path to Python path for testing
 addon_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if addon_path not in sys.path:
     sys.path.insert(0, addon_path)
-
-from freecad_ai_addon.agent.action_library import ActionLibrary
-from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
-from freecad_ai_addon.agent.analysis_action_library import AnalysisActionLibrary
 
 
 def test_action_libraries():

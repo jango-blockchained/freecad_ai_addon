@@ -4,7 +4,6 @@ Test suite for configuration management
 
 import pytest
 import tempfile
-import json
 from pathlib import Path
 from freecad_ai_addon.utils.config import ConfigManager
 

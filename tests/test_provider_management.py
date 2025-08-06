@@ -7,7 +7,6 @@ UI components, and connection management.
 
 import tempfile
 import pytest
-import asyncio
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -90,6 +89,7 @@ class TestProviderManagementSystem:
         
         # Mock a failing then succeeding connection
         call_count = 0
+
         async def mock_check_connection(provider):
             nonlocal call_count
             call_count += 1
@@ -190,7 +190,7 @@ class TestProviderManagementSystem:
         # Verify persistence
         assert config_manager.get('connection.retry_attempts') == 5
         assert config_manager.get('connection.retry_delay') == 10.0
-        assert config_manager.get('connection.enable_fallback') == False
+        assert config_manager.get('connection.enable_fallback') is False
         assert config_manager.get('connection.fallback_order') == ['anthropic', 'ollama']
     
     def test_credential_backup_restore(self):

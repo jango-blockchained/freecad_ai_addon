@@ -5,7 +5,7 @@ Comprehensive library for geometric analysis, validation, measurement,
 and design optimization operations.
 """
 
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Tuple
 import logging
 import math
 
@@ -630,7 +630,7 @@ class AnalysisActionLibrary:
             cleaned_shape = shape.removeSplitter()
             if cleaned_shape.Volume != shape.Volume:
                 validation_results['warnings'].append("Potential self-intersections detected")
-        except:
+        except Exception:
             validation_results['warnings'].append("Could not check for self-intersections")
         
         # Check topology
@@ -691,7 +691,7 @@ class AnalysisActionLibrary:
             if not intersects:
                 try:
                     min_distance = shape1.distToShape(shape2)[0]
-                except:
+                except Exception:
                     min_distance = None
             else:
                 min_distance = 0

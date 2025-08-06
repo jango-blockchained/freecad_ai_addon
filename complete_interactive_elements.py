@@ -8,12 +8,12 @@ and implements the remaining Phase 4.4 tasks.
 import sys
 from pathlib import Path
 
+from freecad_ai_addon.utils.logging import get_logger
+from freecad_ai_addon.ui.conversation_persistence import get_conversation_persistence
+
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
-
-from freecad_ai_addon.utils.logging import get_logger
-from freecad_ai_addon.ui.conversation_persistence import get_conversation_persistence
 
 logger = get_logger('task_completion')
 

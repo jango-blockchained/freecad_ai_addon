@@ -1,9 +1,9 @@
 """
-Test Configuration for FreeCAD AI Addon
+Test package for FreeCAD AI Addon.
+Contains unit tests and integration tests for the addon functionality.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add the addon directory to Python path for testing

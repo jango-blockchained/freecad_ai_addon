@@ -5,7 +5,7 @@ Comprehensive library for sketch creation, constraint management, and
 2D geometric operations that can be executed by AI agents.
 """
 
-from typing import Dict, Any, List, Optional, Tuple, Union
+from typing import Dict, Any, List, Optional, Tuple
 import logging
 import math
 
@@ -276,7 +276,7 @@ class SketchActionLibrary:
                             Sketcher.Constraint('Coincident', i, 2, j, 1)
                         )
                         added_constraints.append(constraint_id)
-                    except:
+                    except Exception:
                         pass  # Constraint might already exist or be invalid
         
         # Add horizontal/vertical constraints for axis-aligned lines
@@ -292,7 +292,7 @@ class SketchActionLibrary:
                             Sketcher.Constraint('Horizontal', i)
                         )
                         added_constraints.append(constraint_id)
-                    except:
+                    except Exception:
                         pass
                 
                 # Check if line is vertical (within tolerance)
@@ -302,7 +302,7 @@ class SketchActionLibrary:
                             Sketcher.Constraint('Vertical', i)
                         )
                         added_constraints.append(constraint_id)
-                    except:
+                    except Exception:
                         pass
         
         sketch.solve()
@@ -531,18 +531,6 @@ class SketchActionLibrary:
         start_rad = math.radians(start_angle)
         end_rad = math.radians(end_angle)
         
-        # Calculate start and end points
-        start_point = App.Vector(
-            center[0] + radius * math.cos(start_rad),
-            center[1] + radius * math.sin(start_rad),
-            0
-        )
-        end_point = App.Vector(
-            center[0] + radius * math.cos(end_rad),
-            center[1] + radius * math.sin(end_rad),
-            0
-        )
-        
         arc = Part.ArcOfCircle(
             Part.Circle(center_point, App.Vector(0, 0, 1), radius),
             start_rad, end_rad
@@ -761,7 +749,7 @@ class SketchActionLibrary:
         try:
             # A sketch is fully constrained if it has no degrees of freedom
             return sketch.getDOF() == 0
-        except:
+        except Exception:
             return False
     
     def _should_be_coincident(self, geom1, geom2) -> bool:

@@ -16,7 +16,7 @@ except ImportError:
     Part = None
     Sketcher = None
 
-from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
+from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus
 from .sketch_action_library import SketchActionLibrary
 
 logger = logging.getLogger(__name__)

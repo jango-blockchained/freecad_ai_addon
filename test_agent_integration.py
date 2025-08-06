@@ -8,14 +8,13 @@ Test script to validate the agent conversation integration without FreeCAD.
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
-# Add the project path for imports
-sys.path.insert(0, '/home/jango/Git/freecad-ai-addon')
-
-# Import after path setup to avoid import errors
 from freecad_ai_addon.ui.enhanced_conversation_widget import (
     EnhancedConversationWidget
 )
 from freecad_ai_addon.utils.logging import get_logger
+
+# Add the project path for imports
+sys.path.insert(0, '/home/jango/Git/freecad-ai-addon')
 
 logger = get_logger('test_agent_integration')
 

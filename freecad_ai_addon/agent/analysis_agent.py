@@ -261,7 +261,7 @@ class AnalysisAgent(BaseAgent):
         point_count = mesh.CountPoints
         
         # Check for mesh defects
-        topology_info = mesh.getTopology()
+        mesh.getTopology()  # Just call for side effects, ignore return value
         
         # Calculate mesh quality metrics
         min_edge_length = float('inf')

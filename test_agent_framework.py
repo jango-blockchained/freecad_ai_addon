@@ -6,10 +6,10 @@ Demonstrates basic functionality and usage patterns.
 import sys
 import os
 
+from freecad_ai_addon.agent import AIAgentFramework
+
 # Add the parent directory to the path so we can import the agent framework
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from freecad_ai_addon.agent import AIAgentFramework
 
 
 def test_agent_framework():
