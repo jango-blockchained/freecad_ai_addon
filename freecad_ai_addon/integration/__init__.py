@@ -7,6 +7,7 @@ and agent integration for deep FreeCAD integration.
 
 __all__ = [
     "workbench",
+    "commands",
     "context_providers",
     "freecad_conversation_dock",
     "agent_conversation_integration"

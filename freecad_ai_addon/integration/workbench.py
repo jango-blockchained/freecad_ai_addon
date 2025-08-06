@@ -1,12 +1,7 @@
-"""
-AI Workbench for FreeCAD
-
-Provides the main workbench interface for the AI Addon.
-"""
-
+import os
 import FreeCADGui as Gui
 import FreeCAD as App
-from freecad_ai_addon.utils.logging import get_logger
+from ..utils.logging import get_logger
 
 logger = get_logger('workbench')
 
@@ -16,17 +11,31 @@ class AIWorkbench(Gui.Workbench):
 
     MenuText = "AI Assistant"
     ToolTip = "AI-powered design assistant with conversation and agent capabilities"
-    Icon = """
-        /* Simple SVG icon placeholder - will be replaced with actual icon */
-        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="8" r="6" fill="#3498db"/>
-            <text x="8" y="12" text-anchor="middle" fill="white" font-size="10">AI</text>
-        </svg>
-    """
-
+    
     def __init__(self):
         """Initialize the AI Workbench"""
         logger.info("Initializing AI Workbench")
+        
+        # Set icon path
+        self._set_icon_path()
+
+    def _set_icon_path(self):
+        """Set the workbench icon path"""
+        try:
+            # Get the addon directory
+            addon_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            icon_path = os.path.join(addon_dir, "resources", "icons", "freecad_ai_addon.svg")
+            
+            if os.path.exists(icon_path):
+                self.Icon = icon_path
+                logger.info(f"Workbench icon set to: {icon_path}")
+            else:
+                logger.warning(f"Icon file not found at: {icon_path}")
+                # Use a simple text-based fallback
+                self.Icon = ""  # Empty string to avoid icon issues
+        except Exception as e:
+            logger.error(f"Failed to set icon: {e}")
+            self.Icon = ""  # Empty string to avoid icon issues
 
     def Initialize(self):
         """Initialize workbench GUI elements"""
@@ -42,24 +51,18 @@ class AIWorkbench(Gui.Workbench):
 
         except Exception as e:
             logger.error("Failed to initialize AI Workbench: %s", str(e))
-            App.Console.PrintError(f"AI Workbench initialization failed: {e}\n")
+            App.Console.PrintError(
+                f"AI Workbench initialization failed: {e}\n")
 
     def _create_toolbars(self):
         """Create toolbars for the workbench"""
         try:
+            # Import and register commands first
+            self._register_commands()
+            
             # Main AI toolbar
             self.appendToolbar("AI Assistant", [
-                "AI_OpenChat",
-                "AI_AgentMode",
-                "separator",
-                "AI_ProviderManager"
-            ])
-
-            # Provider setup toolbar
-            self.appendToolbar("AI Providers", [
-                "AI_AddOpenAI",
-                "AI_AddAnthropic",
-                "AI_AddOllama"
+                "AI_OpenChat"
             ])
 
             logger.info("AI toolbars created")
@@ -70,31 +73,32 @@ class AIWorkbench(Gui.Workbench):
         """Create menus for the workbench"""
         try:
             # Main AI menu
-            self.appendMenu("AI Assistant", ["AI_OpenChat", "AI_AgentMode"])
-
-            # Provider management submenu
-            self.appendMenu(["AI Assistant", "Providers"], [
-                "AI_ProviderManager",
-                "separator",
-                "AI_AddOpenAI",
-                "AI_AddAnthropic",
-                "AI_AddOllama"
-            ])
+            self.appendMenu("AI Assistant", ["AI_OpenChat"])
 
             logger.info("AI menus created")
         except Exception as e:
             logger.error("Failed to create menus: %s", str(e))
 
+    def _register_commands(self):
+        """Register FreeCAD commands for the workbench"""
+        try:
+            # Import and register the basic chat command
+            from .commands import OpenChatCommand
+            
+            # Register commands with FreeCAD
+            Gui.addCommand('AI_OpenChat', OpenChatCommand())
+            
+            logger.info("AI commands registered")
+        except Exception as e:
+            logger.error("Failed to register commands: %s", str(e))
+
     def _create_dockable_widgets(self):
         """Create dockable widgets for the workbench"""
         try:
-            # Import and register conversation dock commands
-            from freecad_ai_addon.integration.freecad_conversation_dock import (
-                register_freecad_commands
-            )
-            register_freecad_commands()
-
-            logger.info("Dockable widgets and commands registered")
+            # For now, just log that this is where dockable widgets
+            # would be created. The actual dock widget will be created
+            # when the OpenChat command is executed
+            logger.info("Dockable widgets setup completed")
         except Exception as e:
             logger.error("Failed to create dockable widgets: %s", str(e))
 
