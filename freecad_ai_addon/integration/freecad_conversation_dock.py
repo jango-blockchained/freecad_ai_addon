@@ -8,7 +8,9 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from PySide6 import QtWidgets, QtCore
 
-from freecad_ai_addon.ui.conversation_widget import ConversationWidget
+from freecad_ai_addon.ui.enhanced_conversation_widget import (
+    EnhancedConversationWidget
+)
 from freecad_ai_addon.integration.context_providers import (
     FreeCADContextProvider
 )
@@ -26,7 +28,7 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
         self.setObjectName("AI_Conversation_Dock")
 
         # Create main widget
-        self.conversation_widget = ConversationWidget()
+        self.conversation_widget = EnhancedConversationWidget()
         self.setWidget(self.conversation_widget)
 
         # Set up context provider
@@ -39,6 +41,11 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
         self._configure_dock()
 
         logger.info("FreeCAD conversation dock initialized")
+
+    @property
+    def _conv_widget(self):
+        """Helper property to access the underlying conversation widget"""
+        return self.conversation_widget.get_conversation_widget()
 
     def _configure_dock(self):
         """Configure dock widget properties"""
@@ -61,7 +68,8 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
 
     def _connect_signals(self):
         """Connect conversation widget signals"""
-        self.conversation_widget.message_sent.connect(
+        # Get the underlying conversation widget from enhanced widget
+        self._conv_widget.message_sent.connect(
             self._handle_user_message
         )
 
@@ -88,7 +96,7 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
 
         except Exception as e:
             logger.error("Error handling user message: %s", str(e))
-            self.conversation_widget.add_error_message(
+            self._conv_widget.add_error_message(
                 f"Error processing message: {str(e)}"
             )
 
@@ -129,7 +137,7 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
             # Get active provider
             active_providers = provider_manager.get_active_providers()
             if not active_providers:
-                self.conversation_widget.add_error_message(
+                self._conv_widget.add_error_message(
                     "No AI providers are configured. "
                     "Please set up a provider in the settings."
                 )
@@ -140,7 +148,7 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
             provider = provider_manager.get_provider(provider_name)
 
             if not provider:
-                self.conversation_widget.add_error_message(
+                self._conv_widget.add_error_message(
                     f"Provider {provider_name} not available."
                 )
                 return
@@ -149,14 +157,14 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
             response = await provider.send_message(message, attachments)
 
             # Add response to conversation
-            self.conversation_widget.add_assistant_message(
+            self._conv_widget.add_assistant_message(
                 response,
                 provider=provider_name
             )
 
         except Exception as e:
             logger.error("Error sending to AI provider: %s", str(e))
-            self.conversation_widget.add_error_message(
+            self._conv_widget.add_error_message(
                 f"Error communicating with AI provider: {str(e)}"
             )
 
@@ -186,14 +194,14 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
             "- Automating repetitive tasks\n\n"
             "Just type your question or request below!"
         )
-        self.conversation_widget.add_system_message(welcome_msg)
+        self._conv_widget.add_system_message(welcome_msg)
 
     def clear_conversation(self):
         """Clear the conversation and show welcome message"""
-        self.conversation_widget.conversation_area.clear_messages()
+        self._conv_widget.conversation_area.clear_messages()
         self.show_welcome_message()
 
-    def get_conversation_widget(self) -> ConversationWidget:
+    def get_conversation_widget(self) -> EnhancedConversationWidget:
         """Get the underlying conversation widget"""
         return self.conversation_widget
 
