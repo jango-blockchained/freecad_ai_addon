@@ -47,20 +47,13 @@ class AnalysisAgent(BaseAgent):
         # Register supported analysis operations
         self.supported_operations = {
             "geometric_properties": self._analyze_geometric_properties,
-            "mass_properties": self._mass_properties,
-            "mesh_analysis": self._mesh_analysis,
-            "printability_analysis": self._printability_analysis,
-            "structural_analysis": self._structural_analysis,
+            "mass_properties": self._analyze_mass_properties,
+            "mesh_analysis": self._analyze_mesh_quality,
+            "structural_analysis": self._analyze_structural_properties,
             "validate_geometry": self._validate_geometry,
             "check_intersections": self._check_intersections,
             "measure_distance": self._measure_distance,
-            "measure_angle": self._measure_angle,
-            "surface_area_analysis": self._surface_area_analysis,
-            "volume_analysis": self._volume_analysis,
-            "cross_section_analysis": self._cross_section_analysis,
-            "draft_angle_analysis": self._draft_angle_analysis,
-            "undercut_analysis": self._undercut_analysis,
-            "wall_thickness_analysis": self._wall_thickness_analysis
+            "measure_angle": self._measure_angle
         }
     
     def can_handle_task(self, task: AgentTask) -> bool:

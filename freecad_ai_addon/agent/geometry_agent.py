@@ -51,9 +51,7 @@ class GeometryAgent(BaseAgent):
             "boolean_difference": self._boolean_difference,
             "boolean_intersection": self._boolean_intersection,
             "add_fillet": self._add_fillet,
-            "add_chamfer": self._add_chamfer,
-            "create_pattern": self._create_pattern,
-            "mirror_object": self._mirror_object
+            "add_chamfer": self._add_chamfer
         }
     
     def can_handle_task(self, task: AgentTask) -> bool:
