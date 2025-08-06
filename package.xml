@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package format="1" xmlns="http://www.freecadweb.org/wiki/Package_Metadata">
+    <name>FreeCAD AI Addon</name>
+    <description>AI-powered design assistant for FreeCAD with MCP integration, conversation interface, and autonomous agent capabilities</description>
+    <version>0.1.0</version>
+    <date>2025-08-06</date>
+    <author>
+        <name>FreeCAD AI Addon Team</name>
+        <email>team@freecad-ai-addon.org</email>
+    </author>
+    <maintainer>
+        <name>FreeCAD AI Addon Team</name>
+        <email>team@freecad-ai-addon.org</email>
+    </maintainer>
+    <license>MIT</license>
+    <url type="website">https://github.com/username/freecad-ai-addon</url>
+    <url type="repository">https://github.com/username/freecad-ai-addon.git</url>
+    <url type="bugtracker">https://github.com/username/freecad-ai-addon/issues</url>
+    <icon>resources/icons/freecad_ai_addon.svg</icon>
+    <content>
+        <workbench>
+            <classname>AIWorkbench</classname>
+            <subdirectory>./</subdirectory>
+        </workbench>
+    </content>
+    <depend>
+        <addon>FreeCAD</addon>
+        <addon_min_version>0.20</addon_min_version>
+    </depend>
+    <tag>AI</tag>
+    <tag>Assistant</tag>
+    <tag>Automation</tag>
+    <tag>MCP</tag>
+    <tag>Chat</tag>
+    <tag>Design</tag>
+</package>

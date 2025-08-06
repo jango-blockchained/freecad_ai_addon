@@ -1,0 +1,66 @@
+
+1
+ 
+Kognitives Scaffolding: Eine Solver-gestützte, 
+Multi-Agenten-Architektur für kontextsensitive KI in 
+FreeCAD 
+ 
+ 
+Abschnitt 1: Das FreeCAD-Ökosystem: Ein parametrisches, 
+erweiterbares Ziel für die KI-Integration 
+ 
+Die erfolgreiche Integration eines KI-gestützten Addons in eine bestehende 
+Softwareumgebung erfordert ein tiefgreifendes Verständnis der grundlegenden 
+Architektur, der Designphilosophie und der programmatischen Schnittstellen dieser 
+Umgebung. FreeCAD, als Open-Source-Computer-Aided-Design (CAD)-Software, 
+stellt ein besonders faszinierendes und herausforderndes Ziel dar. Seine Architektur 
+ist nicht nur ein Werkzeugkasten für geometrische Operationen, sondern verkörpert 
+eine spezifische Methodik des Designs: das parametrische Modellieren. Diese 
+Methodik, die auf dem leistungsstarken Open CASCADE Technology (OCCT) 
+Geometriekern aufbaut, diktiert die Art und Weise, wie ein KI-Agent "denken" und 
+handeln muss, um sinnvolle und gültige 3D-Modelle zu erstellen. Ein Agent, der in 
+diesem Ökosystem operieren soll, muss lernen, in Begriffen von Merkmalen, 
+Abhängigkeiten und lösbaren Zwangsbedingungen zu agieren, anstatt sich auf die 
+bloße Manipulation von geometrischen Koordinaten zu beschränken. Dieser Abschnitt 
+analysiert die fundamentalen Säulen des FreeCAD-Ökosystems – das parametrische 
+Paradigma, die Python-Scripting-API und den integrierten Constraint-Solver – um die 
+grundlegenden Anforderungen und Möglichkeiten für einen intelligenten 
+KI-Assistenten zu definieren. 
+ 
+1.1. Das parametrische Designparadigma und der Open CASCADE Kernel 
+ 
+Das Herzstück von FreeCAD ist sein Bekenntnis zum parametrischen Modellieren. Im 
+Gegensatz zur direkten Modellierung, bei der Geometrien direkt manipuliert werden 
+(z. B. das Ziehen einer Fläche), sind in FreeCAD alle Objekte nativ parametrisch.1 Das 
+bedeutet, ihre Form wird nicht durch eine statische Anordnung von Punkten und 
+Flächen definiert, sondern durch eine Abfolge von Operationen und deren 
+zugehörigen Parametern. Ein einfacher Würfel ist nicht nur eine Sammlung von sechs 
+Flächen und acht Eckpunkten; er ist das Ergebnis einer 
+Part::Box-Funktion, die durch die Eigenschaften Länge, Breite und Höhe definiert wird. 
+Jede Änderung dieser Eigenschaften führt zu einer Neuberechnung des Modells, 
+wobei eine präzise Modellierungshistorie erhalten bleibt.1 Diese Historie ist nicht nur 
+eine Aufzeichnung, sondern das eigentliche Wesen des Modells. 
+Die technische Grundlage für diese Funktionalität liefert der Open CASCADE 
+Technology (OCCT) Geometriekern, eine hochentwickelte C++-Bibliothek, die auf die 
+Modellierung von Volumenkörpern spezialisiert ist.1 Die primäre Datenstruktur, die im 
+Part-Modul von FreeCAD verwendet wird, ist der B-Rep-Datentyp (Boundary 
+Representation) von OCCT.3 Eine B-Rep-Darstellung definiert einen Volumenkörper 
+durch seine topologischen Elemente: Ecken (Vertices), Kanten (Edges), Flächen 
+(Faces), Hüllen (Shells) und den Volumenkörper (Solid) selbst. Diese Elemente sind 
+hierarchisch und relational miteinander verbunden. Eine Fläche wird durch eine 
+Schleife von Kanten begrenzt, und eine Kante wird durch zwei Ecken definiert. Diese 
+topologische Information ist entscheidend und unterscheidet B-Rep-Modelle 
+fundamental von anderen 3D-Darstellungen wie Polygonnetzen (Meshes) oder 
+Punktwolken, die in vielen anderen KI-Anwendungen für 3D-Geometrie üblich sind. 
+Für einen KI-Agenten hat dies tiefgreifende Implikationen. Ein KI-Modell, das darauf 
+trainiert ist, Polygonnetze zu erzeugen, wie es in der generativen KI für Spiele oder 
+visuelle Effekte üblich ist, ist für die CAD-Welt ungeeignet. Ein solches Modell würde 
+eine "dumme" Geometrie ohne die für die Fertigung und Bearbeitung notwendige 
+Präzision und topologische Integrität erzeugen. Ein KI-Agent für FreeCAD kann nicht 
+einfach eine fertige Form ausgeben; er muss eine prozedurale Sequenz von gültigen 
+FreeCAD-Operationen generieren, die bei ihrer Ausführung ein valides, vielfältiges 
+(manifold) B-Rep-Volumenkörpermodell ergeben. Der Fokus verschiebt sich von 
+einem deklarativen ("was") zu einem prozeduralen ("wie") Ansatz. Die KI muss den 
+Konstruktionsprozess selbst erlernen und nachbilden. 
+ 
+1.2. Die Python Scripting API: Die Schnittstelle der KI zur Welt 
