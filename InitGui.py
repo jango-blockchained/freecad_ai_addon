@@ -12,8 +12,21 @@ import os
 
 
 # Add the addon directory to Python path if not already there
-addon_dir = os.path.dirname(__file__)
-if addon_dir not in sys.path:
+# Use a more robust method to get the addon directory that works in FreeCAD
+try:
+    # Try to get the directory from __file__ if available
+    addon_dir = os.path.dirname(__file__)
+except NameError:
+    # Fallback for FreeCAD execution context where __file__ might not be
+    # defined. Use FreeCAD's App module to get the user data directory
+    try:
+        user_data_dir = App.getUserDataDir()
+        addon_dir = os.path.join(user_data_dir, "Mod", "freecad-ai-addon")
+    except (AttributeError, NameError):
+        # Final fallback - use current working directory
+        addon_dir = os.getcwd()
+
+if addon_dir and addon_dir not in sys.path:
     sys.path.insert(0, addon_dir)
 
 
