@@ -37,7 +37,7 @@ def test_action_libraries():
         
     except Exception as e:
         print(f"   ✗ Failed to initialize libraries: {e}")
-        return False
+        assert False, f"Failed to initialize libraries: {e}"
     
     # Test operation discovery
     print("\n2. Testing Operation Discovery...")
@@ -210,7 +210,8 @@ def test_action_libraries():
     print("✓ Operation history and state tracking")
     print("✓ Parameter validation and error handling")
     
-    return True
+    # Test passed
+    assert True
 
 
 def demonstrate_real_world_usage():
@@ -259,7 +260,12 @@ if __name__ == "__main__":
     print("Starting FreeCAD AI Addon Action Library Tests...")
     
     # Run comprehensive tests
-    success = test_action_libraries()
+    try:
+        test_action_libraries()
+        success = True
+    except AssertionError as e:
+        print(f"Tests failed: {e}")
+        success = False
     
     if success:
         # Show real-world usage examples

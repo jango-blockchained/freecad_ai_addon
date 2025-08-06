@@ -162,3 +162,15 @@ class ConfigManager:
         except Exception as e:
             logger.error("Failed to import configuration: %s", str(e))
             return False
+
+
+# Global config manager instance
+_config_manager = None
+
+
+def get_config_manager() -> ConfigManager:
+    """Get the global configuration manager instance"""
+    global _config_manager
+    if _config_manager is None:
+        _config_manager = ConfigManager()
+    return _config_manager

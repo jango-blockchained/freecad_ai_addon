@@ -19,7 +19,7 @@ sys.path.insert(0, '/home/jango/Git/freecad-ai-addon')
 logger = get_logger('test_agent_integration')
 
 
-class TestMainWindow(QMainWindow):
+class AgentIntegrationMainWindow(QMainWindow):
     """Test main window for the enhanced conversation widget"""
     
     def __init__(self):
@@ -66,7 +66,7 @@ def main():
     app = QApplication(sys.argv)
     
     # Create and show main window
-    window = TestMainWindow()
+    window = AgentIntegrationMainWindow()
     window.show()
     
     # Run application

@@ -83,12 +83,40 @@ The addon now includes a sophisticated foundation with:
 3. Search for "FreeCAD AI Addon"
 4. Click Install
 
+### Development Installation (Symlink Method)
+For developers or users who want to install directly from the repository:
+
+**Linux/macOS:**
+```bash
+git clone https://github.com/username/freecad-ai-addon.git
+cd freecad-ai-addon
+./install_addon.sh install
+```
+
+**Windows:**
+```cmd
+git clone https://github.com/username/freecad-ai-addon.git
+cd freecad-ai-addon
+install_addon.bat install
+```
+
+This creates a symlink in your FreeCAD Mod directory, allowing you to:
+- Keep the addon updated with `git pull`
+- Make changes and see them immediately in FreeCAD
+- Easily uninstall with `./install_addon.sh uninstall`
+
+Check installation status with:
+```bash
+./install_addon.sh check    # Linux/macOS
+install_addon.bat check     # Windows
+```
+
 ### Manual Installation
 1. Download the addon from the [releases page](https://github.com/username/freecad-ai-addon/releases)
 2. Extract to your FreeCAD addon directory:
-   - **Linux**: `~/.FreeCAD/Mod/freecad_ai_addon/`
-   - **Windows**: `%APPDATA%\FreeCAD\Mod\freecad_ai_addon\`
-   - **macOS**: `~/Library/Application Support/FreeCAD/Mod/freecad_ai_addon/`
+   - **Linux**: `~/.local/share/FreeCAD/Mod/freecad-ai-addon/` or `~/.FreeCAD/Mod/freecad-ai-addon/`
+   - **Windows**: `%APPDATA%\FreeCAD\Mod\freecad-ai-addon\`
+   - **macOS**: `~/Library/Application Support/FreeCAD/Mod/freecad-ai-addon/`
 3. Restart FreeCAD
 
 ## Requirements
