@@ -14,5 +14,5 @@ sys.path.insert(0, str(addon_dir))
 TEST_CONFIG = {
     "test_data_dir": Path(__file__).parent / "test_data",
     "temp_dir": Path(__file__).parent / "temp",
-    "mock_freecad": True  # Use mock FreeCAD objects in tests
+    "mock_freecad": True,  # Use mock FreeCAD objects in tests
 }

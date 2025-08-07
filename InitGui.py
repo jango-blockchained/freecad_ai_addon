@@ -43,17 +43,37 @@ class AIWorkbench(Gui.Workbench):
     ToolTip = "AI-powered design assistant with conversation and agent tools"
 
     def __init__(self):
-        """Initialize the workbench"""
-        super().__init__()
-        # Set Icon dynamically to avoid initialization issues
-        icon_path = os.path.join(
-            get_addon_dir(), "resources", "icons", "freecad_ai_addon.svg"
-        )
-        if os.path.exists(icon_path):
-            self.Icon = icon_path
-        else:
-            # Fallback to a default icon or no icon
-            self.Icon = ""
+        """Initialize the AI workbench."""
+        try:
+            # Set the icon in __init__ method following the MCP workbench
+            # pattern
+            try:
+                icon_path = os.path.join(
+                    os.path.dirname(__file__),
+                    "resources",
+                    "icons",
+                    "freecad_ai_addon.svg",
+                )
+                App.Console.PrintMessage(
+                    f"AI Workbench: Checking icon at: {icon_path}\n"
+                )
+                if os.path.exists(icon_path):
+                    self.__class__.Icon = icon_path
+                    App.Console.PrintMessage(
+                        f"AI Workbench: Icon set to: {icon_path}\n"
+                    )
+                else:
+                    self.__class__.Icon = ""
+                    App.Console.PrintError(
+                        f"AI Workbench: Icon file not found at: {icon_path}\n"
+                    )
+            except Exception as e:
+                self.__class__.Icon = ""
+                App.Console.PrintError(f"AI Workbench: Icon setup error: {e}\n")
+
+            App.Console.PrintMessage("AI Workbench: Instance created\n")
+        except Exception as e:
+            App.Console.PrintError(f"AI Workbench: Init error: {e}\n")
 
     def Initialize(self):
         """Initialize workbench GUI elements"""
@@ -66,9 +86,7 @@ class AIWorkbench(Gui.Workbench):
             App.Console.PrintMessage("AI Workbench initialized successfully\n")
 
         except (ImportError, AttributeError) as e:
-            App.Console.PrintError(
-                f"AI Workbench initialization failed: {e}\n"
-            )
+            App.Console.PrintError(f"AI Workbench initialization failed: {e}\n")
 
     def Activated(self):
         """Called when workbench is activated"""
@@ -79,8 +97,8 @@ class AIWorkbench(Gui.Workbench):
         App.Console.PrintMessage("AI Assistant workbench deactivated\n")
 
     def GetClassName(self):
-        """Return the class name"""
-        return "AIWorkbench"
+        """Return the class name for FreeCAD workbench registration"""
+        return "Gui::PythonWorkbench"
 
 
 def Initialize():

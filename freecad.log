@@ -1,0 +1,148 @@
+﻿Log: Time = 2025-Aug-07 04:11:34
+Log: AboutImage = freecadabout
+Log: AppDataSkipVendor = true
+Log: AppHomePath = /usr/lib/freecad/
+Log: AppIcon = freecad
+Log: AppTempPath = /tmp/
+Log: BOOST_VERSION = 1_83
+Log: BinPath = /usr/lib/freecad/bin/
+Log: BuildRepositoryURL = https://code.launchpad.net/~vcs-imports/freecad/trunk
+Log: BuildRevision = 
+Log: BuildRevisionDate = 2025/04/02 12:02:06
+Log: BuildVersionMajor = 1
+Log: BuildVersionMinor = 0
+Log: BuildVersionPoint = 0
+Log: BuildVersionSuffix = 
+Log: Console = 1
+Log: CopyrightInfo = (C) 2001-2024 FreeCAD contributors
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+
+
+Log: Debug = 0
+Log: DocPath = /usr/lib/freecad/doc/
+Log: EIGEN_VERSION = 3.4.0
+Log: ExeName = FreeCAD
+Log: ExeVendor = FreeCAD
+Log: ExeVersion = 1.0.0
+Log: LoggingConsole = 1
+Log: LoggingFile = 1
+Log: LoggingFileName = freecad.log
+Log: MaintainerUrl = https://www.freecad.org/wiki/Main_Page
+Log: OCC_VERSION = 7.8.1
+Log: PATH = /home/jango/anaconda3/bin:/home/jango/anaconda3/condabin:/home/jango/.nvm/versions/node/v20.18.1/bin:/home/jango/.bun/bin:/home/jango/.local/share/pnpm:/home/jango/bin:/home/jango/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jango/.config/Code/User/globalStorage/github.copilot-chat/debugCommand
+Log: PYSIDE_VERSION = 5.15.16
+Log: PYTHONPATH = 
+Log: PYTHON_VERSION = 3.13.2
+Log: PythonSearchPath = /usr/lib/python313.zip:/usr/lib/python3.13:/usr/lib/python3.13/lib-dynload
+Log: QT_VERSION = 5.15.15
+Log: RunMode = Cmd
+Log: SMESH_VERSION = 7.7.1.0
+Log: SplashAlignment = Bottom|Left
+Log: SplashInfoColor = #000000
+Log: SplashInfoPosition = 6,75
+Log: SplashScreen = freecadsplash
+Log: SplashTextColor = #418FDE
+Log: SplashWarningColor = #CA333B
+Log: StartWorkbench = PartDesignWorkbench
+Log: SystemParameter = /home/jango/.config/FreeCAD/system.cfg
+Log: UserAppData = /home/jango/.local/share/FreeCAD/
+Log: UserCachePath = /home/jango/.cache/FreeCAD/Cache/
+Log: UserConfigPath = /home/jango/.config/FreeCAD/
+Log: UserHomePath = /home/jango
+Log: UserMacroPath = /home/jango/.local/share/FreeCAD/Macro/
+Log: UserParameter = /home/jango/.config/FreeCAD/user.cfg
+Log: Verbose = 
+Log: XERCESC_VERSION = 3.2.4
+Log: Create Application
+Log: Run App init script
+Log: Init: starting App::FreeCADInit.py
+Log: Init:   Searching for modules...
+Log: Init:      Initializing /usr/share/freecad/Mod/Spreadsheet... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Inspection... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Surface... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Plot(Init.py not found)... ignore
+Log: Init:      Initializing /usr/share/freecad/Mod/Test... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Robot... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Measure... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Tux(Init.py not found)... ignore
+Log: Init:      Initializing /usr/share/freecad/Mod/Points... done
+Log: Init:      Initializing /usr/share/freecad/Mod/MeshPart... done
+Log: Init:      Initializing /usr/share/freecad/Mod/AddonManager... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Material... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Help(Init.py not found)... ignore
+Log: Init:      Initializing /usr/share/freecad/Mod/ReverseEngineering... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Web... done
+Log: Init:      Initializing /usr/share/freecad/Mod/PartDesign... done
+Log: Init:      Initializing /usr/share/freecad/Mod/CAM... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Idf... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Fem... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Assembly... done
+Log: Init:      Initializing /usr/share/freecad/Mod/OpenSCAD... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Import... done
+Log: Init:      Initializing /usr/share/freecad/Mod/BIM... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Show(Init.py not found)... ignore
+Log: Init:      Initializing /usr/share/freecad/Mod/Mesh... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Part... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Draft... done
+Log: Init:      Initializing /usr/share/freecad/Mod/TechDraw... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Sketcher... done
+Log: Init:      Initializing /usr/share/freecad/Mod/Start... done
+Log: Init:      Initializing /home/jango/.local/share/FreeCAD/Mod/3D_Printing_Tools.disabled(Init.py not found)... ignore
+Msg: FreeCAD AI Addon: Core initialization completed
+Log: Init:      Initializing /home/jango/.local/share/FreeCAD/Mod/freecad-ai-addon/... done
+Log: Using /usr/share/freecad/Mod as module path!
+Log: System path after init:
+Log:    /usr/lib/freecad/bin
+Log:    /usr/share/freecad/Mod/Spreadsheet
+Log:    /usr/share/freecad/Mod/Inspection
+Log:    /usr/share/freecad/Mod/Surface
+Log:    /usr/share/freecad/Mod/Plot
+Log:    /usr/share/freecad/Mod/Test
+Log:    /usr/share/freecad/Mod/Robot
+Log:    /usr/share/freecad/Mod/Measure
+Log:    /usr/share/freecad/Mod/Tux
+Log:    /usr/share/freecad/Mod/Points
+Log:    /usr/share/freecad/Mod/MeshPart
+Log:    /usr/share/freecad/Mod/AddonManager
+Log:    /usr/share/freecad/Mod/Material
+Log:    /usr/share/freecad/Mod/Help
+Log:    /usr/share/freecad/Mod/ReverseEngineering
+Log:    /usr/share/freecad/Mod/Web
+Log:    /usr/share/freecad/Mod/PartDesign
+Log:    /usr/share/freecad/Mod/CAM
+Log:    /usr/share/freecad/Mod/Idf
+Log:    /usr/share/freecad/Mod/Fem
+Log:    /usr/share/freecad/Mod/Assembly
+Log:    /usr/share/freecad/Mod/OpenSCAD
+Log:    /usr/share/freecad/Mod/Import
+Log:    /usr/share/freecad/Mod/BIM
+Log:    /usr/share/freecad/Mod/Show
+Log:    /usr/share/freecad/Mod/Mesh
+Log:    /usr/share/freecad/Mod/Part
+Log:    /usr/share/freecad/Mod/Draft
+Log:    /usr/share/freecad/Mod/TechDraw
+Log:    /usr/share/freecad/Mod/Sketcher
+Log:    /usr/share/freecad/Mod/Start
+Log:    /home/jango/.local/share/FreeCAD/Mod/3D_Printing_Tools.disabled
+Log:    /home/jango/.local/share/FreeCAD/Mod/freecad-ai-addon
+Log:    /home/jango/.local/share/FreeCAD/Mod/freecad-ai-addon/
+Log:    /home/jango/anaconda3/bin
+Log:    /home/jango/anaconda3/condabin
+Log:    /home/jango/.nvm/versions/node/v20.18.1/bin
+Log:    /home/jango/.bun/bin
+Log:    /home/jango/.local/share/pnpm
+Log:    /home/jango/bin
+Log:    /home/jango/.local/bin
+Log:    /usr/local/sbin
+Log:    /usr/local/bin
+Log:    /usr/sbin
+Log:    /usr/bin
+Log:    /sbin
+Log:    /bin
+Log:    /usr/games
+Log:    /usr/local/games
+Log:    /snap/bin
+Log:    /snap/bin
+Log:    /home/jango/.config/Code/User/globalStorage/github.copilot-chat/debugCommand
+Log: Init: App::FreeCADInit.py done
+Log: Init: Processing command line files
