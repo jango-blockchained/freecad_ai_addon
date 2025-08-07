@@ -37,7 +37,7 @@ FREECAD_MOD_DIRS=(
 
 # Get the current directory (should be the addon root)
 ADDON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ADDON_NAME="freecad-ai-addon"
+ADDON_NAME="freecad_ai_addon"
 
 print_status "FreeCAD AI Addon Installation Script"
 echo "======================================"

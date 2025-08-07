@@ -1487,7 +1487,7 @@ This continued expansion of the taskplan provides comprehensive coverage of ente
     ## Method 2: Manual Installation
     ```bash
     # Download latest release
-    wget https://github.com/user/freecad-ai-addon/releases/latest
+    wget https://github.com/user/freecad_ai_addon/releases/latest
     
     # Extract to FreeCAD addon directory
     # Linux: ~/.FreeCAD/Mod/
@@ -2564,7 +2564,7 @@ This comprehensive continuation of the taskplan provides a complete framework fo
 - [ ] Create FreeCAD addon package
   - **Example Package Structure**:
     ```text
-    freecad-ai-addon-v1.0.0/
+    freecad_ai_addon-v1.0.0/
     ├── package.xml (FreeCAD addon metadata)
     ├── InitGui.py (GUI initialization)
     ├── Init.py (Core initialization)
@@ -2586,7 +2586,7 @@ This comprehensive continuation of the taskplan provides a complete framework fo
         <author email="dev@example.com">FreeCAD AI Team</author>
         <maintainer email="dev@example.com">FreeCAD AI Team</maintainer>
         <license>MIT</license>
-        <url type="repository">https://github.com/user/freecad-ai-addon</url>
+        <url type="repository">https://github.com/user/freecad_ai_addon</url>
         <icon>resources/icons/freecad_ai_addon.svg</icon>
     </package>
     ```

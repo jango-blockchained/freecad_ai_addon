@@ -84,15 +84,15 @@ jobs:
     - name: Create addon archive
       run: |
         # Create FreeCAD addon archive
-        zip -r freecad-ai-addon.zip . -x ".git/*" ".github/*" "tests/*" "*.pyc" "__pycache__/*"
+        zip -r freecad_ai_addon.zip . -x ".git/*" ".github/*" "tests/*" "*.pyc" "__pycache__/*"
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: freecad-ai-addon
+        name: freecad_ai_addon
         path: |
           dist/
-          freecad-ai-addon.zip
+          freecad_ai_addon.zip
 
   security:
     runs-on: ubuntu-latest

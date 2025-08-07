@@ -6,16 +6,16 @@
     <date>2025-08-06</date>
     <author>
         <name>FreeCAD AI Addon Team</name>
-        <email>team@freecad-ai-addon.org</email>
+        <email>team@freecad_ai_addon.org</email>
     </author>
     <maintainer>
         <name>FreeCAD AI Addon Team</name>
-        <email>team@freecad-ai-addon.org</email>
+        <email>team@freecad_ai_addon.org</email>
     </maintainer>
     <license>MIT</license>
-    <url type="website">https://github.com/username/freecad-ai-addon</url>
-    <url type="repository">https://github.com/username/freecad-ai-addon.git</url>
-    <url type="bugtracker">https://github.com/username/freecad-ai-addon/issues</url>
+    <url type="website">https://github.com/username/freecad_ai_addon</url>
+    <url type="repository">https://github.com/username/freecad_ai_addon.git</url>
+    <url type="bugtracker">https://github.com/username/freecad_ai_addon/issues</url>
     <icon>resources/icons/freecad_ai_addon.svg</icon>
     <content>
         <workbench>

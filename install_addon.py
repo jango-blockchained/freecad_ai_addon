@@ -113,7 +113,7 @@ def install_addon():
     print()
 
     addon_dir = get_addon_directory()
-    addon_name = "freecad-ai-addon"
+    addon_name = "freecad_ai_addon"
 
     print(f"Addon directory: {addon_dir}")
 
@@ -168,7 +168,7 @@ def uninstall_addon():
     """Uninstall the addon by removing symlinks."""
     print("Uninstalling FreeCAD AI Addon...")
 
-    addon_name = "freecad-ai-addon"
+    addon_name = "freecad_ai_addon"
     found = False
 
     for mod_dir in get_freecad_mod_directories():
@@ -200,7 +200,7 @@ def check_installation():
     print("Checking installation status...")
 
     addon_dir = get_addon_directory()
-    addon_name = "freecad-ai-addon"
+    addon_name = "freecad_ai_addon"
     found = False
 
     for mod_dir in get_freecad_mod_directories():
@@ -240,7 +240,7 @@ def show_usage():
     print()
     print("The addon will be installed to one of these locations:")
     for mod_dir in get_freecad_mod_directories():
-        print(f"  - {mod_dir}/freecad-ai-addon")
+        print(f"  - {mod_dir}/freecad_ai_addon")
     print()
 
 

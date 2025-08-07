@@ -39,8 +39,8 @@ By participating in this project, you agree to abide by our Code of Conduct:
 1. **Fork the repository**
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/yourusername/freecad-ai-addon.git
-   cd freecad-ai-addon
+   git clone https://github.com/yourusername/freecad_ai_addon.git
+   cd freecad_ai_addon
    ```
 3. **Set up development environment**:
    ```bash

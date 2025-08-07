@@ -12,7 +12,7 @@ from freecad_ai_addon.ui.enhanced_conversation_widget import EnhancedConversatio
 from freecad_ai_addon.utils.logging import get_logger
 
 # Add the project path for imports
-sys.path.insert(0, "/home/jango/Git/freecad-ai-addon")
+sys.path.insert(0, "/home/jango/Git/freecad_ai_addon")
 
 logger = get_logger("test_agent_integration")
 

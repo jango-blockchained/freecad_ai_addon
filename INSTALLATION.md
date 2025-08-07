@@ -9,16 +9,16 @@ The easiest way to install the addon for development or testing is using the pro
 ### Linux/macOS
 
 ```bash
-git clone https://github.com/username/freecad-ai-addon.git
-cd freecad-ai-addon
+git clone https://github.com/username/freecad_ai_addon.git
+cd freecad_ai_addon
 ./install_addon.sh install
 ```
 
 ### Windows
 
 ```cmd
-git clone https://github.com/username/freecad-ai-addon.git
-cd freecad-ai-addon
+git clone https://github.com/username/freecad_ai_addon.git
+cd freecad_ai_addon
 install_addon.bat install
 ```
 
@@ -115,7 +115,7 @@ Using the installation scripts provides several benefits:
 1. **Detect FreeCAD Installation**: Locate the appropriate FreeCAD Mod directory
 2. **Create Directory**: Ensure the Mod directory exists
 3. **Remove Existing**: Clean up any previous installations
-4. **Create Symlink**: Link the addon directory to `freecad-ai-addon/` in Mod
+4. **Create Symlink**: Link the addon directory to `freecad_ai_addon/` in Mod
 5. **Verify Installation**: Confirm the symlink was created successfully
 
 ### Symlink vs Junction (Windows)
@@ -158,13 +158,13 @@ If you have a previous installation:
 
 ### Manual Copy Installation
 1. Copy the entire addon folder to your FreeCAD Mod directory
-2. Rename it to `freecad-ai-addon`
+2. Rename it to `freecad_ai_addon`
 3. Restart FreeCAD
 
 ### ZIP Installation
 1. Download the addon as a ZIP file
 2. Extract to your FreeCAD Mod directory
-3. Ensure the folder is named `freecad-ai-addon`
+3. Ensure the folder is named `freecad_ai_addon`
 4. Restart FreeCAD
 
 ### FreeCAD Addon Manager
@@ -186,7 +186,7 @@ After installation, verify the addon is working:
 
 After successful installation, you should see:
 ```
-~/.local/share/FreeCAD/Mod/freecad-ai-addon/  (symlink)
+~/.local/share/FreeCAD/Mod/freecad_ai_addon/  (symlink)
 ├── freecad_ai_addon/
 ├── InitGui.py
 ├── Init.py

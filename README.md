@@ -177,15 +177,15 @@ For developers and advanced users who want cutting-edge features:
 
 **Linux/macOS:**
 ```bash
-git clone https://github.com/your-repo/freecad-ai-addon.git
-cd freecad-ai-addon
+git clone https://github.com/your-repo/freecad_ai_addon.git
+cd freecad_ai_addon
 ./install_addon.sh install  # Creates symlink for live development
 ```
 
 **Windows:**
 ```cmd
-git clone https://github.com/your-repo/freecad-ai-addon.git
-cd freecad-ai-addon
+git clone https://github.com/your-repo/freecad_ai_addon.git
+cd freecad_ai_addon
 install_addon.bat install
 ```
 
@@ -196,11 +196,11 @@ install_addon.bat check     # Windows
 ```
 
 #### 📦 **Method 3: Manual Installation**
-1. Download from [releases page](https://github.com/your-repo/freecad-ai-addon/releases)
+1. Download from [releases page](https://github.com/your-repo/freecad_ai_addon/releases)
 2. Extract to FreeCAD addon directory:
-   - **Linux**: `~/.local/share/FreeCAD/Mod/freecad-ai-addon/`
-   - **Windows**: `%APPDATA%\FreeCAD\Mod\freecad-ai-addon\`
-   - **macOS**: `~/Library/Application Support/FreeCAD/Mod/freecad-ai-addon/`
+   - **Linux**: `~/.local/share/FreeCAD/Mod/freecad_ai_addon/`
+   - **Windows**: `%APPDATA%\FreeCAD\Mod\freecad_ai_addon\`
+   - **macOS**: `~/Library/Application Support/FreeCAD/Mod/freecad_ai_addon/`
 3. Restart FreeCAD
 
 ### 🎮 Quick Start Guide
@@ -611,8 +611,8 @@ pip install virtualenv
 #### **Setup Development Environment**
 ```bash
 # Clone and setup
-git clone https://github.com/your-repo/freecad-ai-addon.git
-cd freecad-ai-addon
+git clone https://github.com/your-repo/freecad_ai_addon.git
+cd freecad_ai_addon
 
 # Create virtual environment
 python -m venv venv
@@ -700,14 +700,14 @@ pytest tests/performance/ -v --benchmark-only
 ### Getting Help
 
 #### **Documentation**
-- 📚 **[Complete Wiki](https://github.com/your-repo/freecad-ai-addon/wiki)**: Comprehensive guides and tutorials
+- 📚 **[Complete Wiki](https://github.com/your-repo/freecad_ai_addon/wiki)**: Comprehensive guides and tutorials
 - 🎥 **[Video Tutorials](https://youtube.com/playlist)**: Step-by-step video guides
 - 📖 **[API Documentation](https://docs.your-site.com)**: Complete API reference
 - 🔬 **[Research Papers](docs/research.md)**: Academic foundations and methodology
 
 #### **Community Channels**
-- 💬 **[GitHub Discussions](https://github.com/your-repo/freecad-ai-addon/discussions)**: Q&A and feature requests
-- 🐛 **[Issue Tracker](https://github.com/your-repo/freecad-ai-addon/issues)**: Bug reports and feature requests
+- 💬 **[GitHub Discussions](https://github.com/your-repo/freecad_ai_addon/discussions)**: Q&A and feature requests
+- 🐛 **[Issue Tracker](https://github.com/your-repo/freecad_ai_addon/issues)**: Bug reports and feature requests
 - 🗨️ **[FreeCAD Forum](https://forum.freecad.org/viewtopic.php?f=XXX)**: Community discussions
 - 💭 **[Discord Server](https://discord.gg/XXX)**: Real-time chat and support
 
@@ -754,7 +754,7 @@ If you use this addon in academic research, please cite:
   title={FreeCAD AI Addon: Cognitive Scaffolding for Intelligent CAD},
   author={Your Name},
   year={2024},
-  url={https://github.com/your-repo/freecad-ai-addon}
+  url={https://github.com/your-repo/freecad_ai_addon}
 }
 ```
 
@@ -764,7 +764,7 @@ If you use this addon in academic research, please cite:
 
 The FreeCAD AI Addon represents a paradigm shift in how we approach computer-aided design. By combining the precision of parametric modeling with the intelligence of modern AI, we're creating tools that don't just execute commands—they understand intent, learn from experience, and collaborate as true design partners.
 
-**[🔽 Download Now](https://github.com/your-repo/freecad-ai-addon/releases)** • **[📚 Read the Docs](https://docs.your-site.com)** • **[💬 Join Community](https://discord.gg/XXX)**
+**[🔽 Download Now](https://github.com/your-repo/freecad_ai_addon/releases)** • **[📚 Read the Docs](https://docs.your-site.com)** • **[💬 Join Community](https://discord.gg/XXX)**
 
 ---
 

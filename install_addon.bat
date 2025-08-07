@@ -11,7 +11,7 @@ echo.
 REM Get the current directory (should be the addon root)
 set "ADDON_DIR=%~dp0"
 set "ADDON_DIR=%ADDON_DIR:~0,-1%"
-set "ADDON_NAME=freecad-ai-addon"
+set "ADDON_NAME=freecad_ai_addon"
 
 REM Default FreeCAD Mod directories
 set "MOD_DIR1=%USERPROFILE%\AppData\Roaming\FreeCAD\Mod"

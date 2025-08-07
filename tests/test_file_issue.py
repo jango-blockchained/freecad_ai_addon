@@ -16,7 +16,7 @@ def test_initgui_without_file():
     print("Testing InitGui.py without __file__ variable...")
 
     # Change to the addon directory
-    addon_path = "/home/jango/Git/freecad-ai-addon"
+    addon_path = "/home/jango/Git/freecad_ai_addon"
     os.chdir(addon_path)
 
     # Create a mock FreeCAD environment

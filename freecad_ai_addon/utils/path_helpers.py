@@ -20,7 +20,7 @@ def get_addon_dir():
         # defined. Use FreeCAD's App module to get the user data directory.
         try:
             user_data_dir = App.getUserDataDir()
-            return os.path.join(user_data_dir, "Mod", "freecad-ai-addon")
+            return os.path.join(user_data_dir, "Mod", "freecad_ai_addon")
         except (AttributeError, NameError):
             # Final fallback - use current working directory
             return os.getcwd()
