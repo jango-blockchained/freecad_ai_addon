@@ -10,9 +10,4 @@ __author__ = "FreeCAD AI Addon Team"
 __license__ = "MIT"
 
 # Package metadata
-__all__ = [
-    "core",
-    "ui",
-    "integration",
-    "utils"
-]
+__all__ = ["core", "ui", "integration", "utils"]

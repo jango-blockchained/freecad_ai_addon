@@ -8,22 +8,27 @@ such as setting up logging, configuration, and core services.
 import FreeCAD as App
 import os
 import sys
+from freecad_ai_addon.utils.path_helpers import get_addon_dir
 
-# Add the addon directory to Python path
-addon_dir = os.path.dirname(__file__)
-if addon_dir not in sys.path:
+# Get the addon directory and add it to the Python path
+addon_dir = get_addon_dir()
+if addon_dir and addon_dir not in sys.path:
     sys.path.insert(0, addon_dir)
 
 try:
     # Initialize logging system
     from freecad_ai_addon.utils.logging import setup_logging
+
     setup_logging()
-    
+
     # Initialize configuration system
     from freecad_ai_addon.utils.config import ConfigManager
+
     config = ConfigManager()
-    
+
     App.Console.PrintMessage("FreeCAD AI Addon: Core initialization completed\n")
-    
+
 except Exception as e:
-    App.Console.PrintError(f"FreeCAD AI Addon: Failed to initialize core components: {str(e)}\n")
+    App.Console.PrintError(
+        f"FreeCAD AI Addon: Failed to initialize core components: {str(e)}\n"
+    )

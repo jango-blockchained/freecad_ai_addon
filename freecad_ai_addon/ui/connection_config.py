@@ -6,12 +6,13 @@ Provides UI for configuring connection management settings.
 
 from PySide6 import QtWidgets
 from freecad_ai_addon.core.connection_manager import (
-    get_connection_manager, ConnectionConfig
+    get_connection_manager,
+    ConnectionConfig,
 )
 from freecad_ai_addon.utils.config import ConfigManager
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('connection_config')
+logger = get_logger("connection_config")
 
 
 class ConnectionConfigDialog(QtWidgets.QDialog):
@@ -36,7 +37,9 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
 
         # Header
         header_label = QtWidgets.QLabel("Connection Management Configuration")
-        header_label.setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;")
+        header_label.setStyleSheet(
+            "font-size: 16px; font-weight: bold; margin-bottom: 10px;"
+        )
         layout.addWidget(header_label)
 
         # Retry Settings Group
@@ -90,7 +93,9 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
         fallback_group = QtWidgets.QGroupBox("Fallback Settings")
         fallback_layout = QtWidgets.QVBoxLayout(fallback_group)
 
-        self.enable_fallback_checkbox = QtWidgets.QCheckBox("Enable automatic fallback to other providers")
+        self.enable_fallback_checkbox = QtWidgets.QCheckBox(
+            "Enable automatic fallback to other providers"
+        )
         self.enable_fallback_checkbox.setChecked(True)
         fallback_layout.addWidget(self.enable_fallback_checkbox)
 
@@ -160,35 +165,35 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
         try:
             # Load from config manager
             self.retry_attempts_spin.setValue(
-                self.config_manager.get('connection.retry_attempts', 3)
+                self.config_manager.get("connection.retry_attempts", 3)
             )
             self.retry_delay_spin.setValue(
-                self.config_manager.get('connection.retry_delay', 5.0)
+                self.config_manager.get("connection.retry_delay", 5.0)
             )
             self.retry_backoff_spin.setValue(
-                self.config_manager.get('connection.retry_backoff', 2.0)
+                self.config_manager.get("connection.retry_backoff", 2.0)
             )
             self.max_retry_delay_spin.setValue(
-                self.config_manager.get('connection.max_retry_delay', 60.0)
+                self.config_manager.get("connection.max_retry_delay", 60.0)
             )
             self.health_check_interval_spin.setValue(
-                self.config_manager.get('connection.health_check_interval', 30.0)
+                self.config_manager.get("connection.health_check_interval", 30.0)
             )
             self.connection_timeout_spin.setValue(
-                self.config_manager.get('connection.timeout', 30.0)
+                self.config_manager.get("connection.timeout", 30.0)
             )
             self.enable_fallback_checkbox.setChecked(
-                self.config_manager.get('connection.enable_fallback', True)
+                self.config_manager.get("connection.enable_fallback", True)
             )
             self.pool_size_spin.setValue(
-                self.config_manager.get('connection.pool_size', 5)
+                self.config_manager.get("connection.pool_size", 5)
             )
             self.pool_timeout_spin.setValue(
-                self.config_manager.get('connection.pool_timeout', 10.0)
+                self.config_manager.get("connection.pool_timeout", 10.0)
             )
 
             # Load fallback order
-            fallback_order = self.config_manager.get('connection.fallback_order', [])
+            fallback_order = self.config_manager.get("connection.fallback_order", [])
             for provider in fallback_order:
                 self.fallback_list.addItem(provider)
 
@@ -199,21 +204,38 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
         """Save settings from UI to config"""
         try:
             # Save to config manager
-            self.config_manager.set('connection.retry_attempts', self.retry_attempts_spin.value())
-            self.config_manager.set('connection.retry_delay', self.retry_delay_spin.value())
-            self.config_manager.set('connection.retry_backoff', self.retry_backoff_spin.value())
-            self.config_manager.set('connection.max_retry_delay', self.max_retry_delay_spin.value())
-            self.config_manager.set('connection.health_check_interval', self.health_check_interval_spin.value())
-            self.config_manager.set('connection.timeout', self.connection_timeout_spin.value())
-            self.config_manager.set('connection.enable_fallback', self.enable_fallback_checkbox.isChecked())
-            self.config_manager.set('connection.pool_size', self.pool_size_spin.value())
-            self.config_manager.set('connection.pool_timeout', self.pool_timeout_spin.value())
+            self.config_manager.set(
+                "connection.retry_attempts", self.retry_attempts_spin.value()
+            )
+            self.config_manager.set(
+                "connection.retry_delay", self.retry_delay_spin.value()
+            )
+            self.config_manager.set(
+                "connection.retry_backoff", self.retry_backoff_spin.value()
+            )
+            self.config_manager.set(
+                "connection.max_retry_delay", self.max_retry_delay_spin.value()
+            )
+            self.config_manager.set(
+                "connection.health_check_interval",
+                self.health_check_interval_spin.value(),
+            )
+            self.config_manager.set(
+                "connection.timeout", self.connection_timeout_spin.value()
+            )
+            self.config_manager.set(
+                "connection.enable_fallback", self.enable_fallback_checkbox.isChecked()
+            )
+            self.config_manager.set("connection.pool_size", self.pool_size_spin.value())
+            self.config_manager.set(
+                "connection.pool_timeout", self.pool_timeout_spin.value()
+            )
 
             # Save fallback order
             fallback_order = []
             for i in range(self.fallback_list.count()):
                 fallback_order.append(self.fallback_list.item(i).text())
-            self.config_manager.set('connection.fallback_order', fallback_order)
+            self.config_manager.set("connection.fallback_order", fallback_order)
 
             # Update connection manager config
             config = ConnectionConfig(
@@ -226,7 +248,7 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
                 enable_fallback=self.enable_fallback_checkbox.isChecked(),
                 fallback_order=fallback_order,
                 pool_size=self.pool_size_spin.value(),
-                pool_timeout=self.pool_timeout_spin.value()
+                pool_timeout=self.pool_timeout_spin.value(),
             )
 
             self.connection_manager.update_config(config)
@@ -249,7 +271,7 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.information(
                 self,
                 "No Providers Available",
-                "All available providers are already in the fallback list."
+                "All available providers are already in the fallback list.",
             )
             return
 
@@ -259,7 +281,7 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
             "Select provider to add:",
             available_providers,
             0,
-            False
+            False,
         )
 
         if ok:
@@ -278,7 +300,7 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
             "Reset to Defaults",
             "Are you sure you want to reset all connection settings to defaults?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
 
         if reply == QtWidgets.QMessageBox.Yes:
@@ -300,7 +322,5 @@ class ConnectionConfigDialog(QtWidgets.QDialog):
             super().accept()
         except Exception as e:
             QtWidgets.QMessageBox.critical(
-                self,
-                "Save Error",
-                f"Failed to save settings:\n{str(e)}"
+                self, "Save Error", f"Failed to save settings:\n{str(e)}"
             )

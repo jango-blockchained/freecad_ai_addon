@@ -9,7 +9,7 @@ from freecad_ai_addon.ui.provider_management import EnhancedProviderManagerDialo
 from freecad_ai_addon.ui.security_dialogs import APIKeyInputDialog
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('commands')
+logger = get_logger("commands")
 
 
 class ProviderManagerCommand:
@@ -18,9 +18,9 @@ class ProviderManagerCommand:
     def GetResources(self):
         """Return command resources"""
         return {
-            'Pixmap': 'ai_provider_settings.svg',
-            'MenuText': 'Manage AI Providers',
-            'ToolTip': 'Configure API keys and settings for AI providers'
+            "Pixmap": "ai_provider_settings.svg",
+            "MenuText": "Manage AI Providers",
+            "ToolTip": "Configure API keys and settings for AI providers",
         }
 
     def IsActive(self):
@@ -43,9 +43,9 @@ class AddOpenAIProviderCommand:
     def GetResources(self):
         """Return command resources"""
         return {
-            'Pixmap': 'ai_openai.svg',
-            'MenuText': 'Add OpenAI',
-            'ToolTip': 'Configure OpenAI API access'
+            "Pixmap": "ai_openai.svg",
+            "MenuText": "Add OpenAI",
+            "ToolTip": "Configure OpenAI API access",
         }
 
     def IsActive(self):
@@ -55,7 +55,7 @@ class AddOpenAIProviderCommand:
     def Activated(self):
         """Execute the command"""
         try:
-            dialog = APIKeyInputDialog('openai')
+            dialog = APIKeyInputDialog("openai")
             dialog.exec()
         except Exception as e:
             logger.error("Failed to open OpenAI configuration: %s", str(e))
@@ -68,9 +68,9 @@ class AddAnthropicProviderCommand:
     def GetResources(self):
         """Return command resources"""
         return {
-            'Pixmap': 'ai_anthropic.svg',
-            'MenuText': 'Add Anthropic',
-            'ToolTip': 'Configure Anthropic API access'
+            "Pixmap": "ai_anthropic.svg",
+            "MenuText": "Add Anthropic",
+            "ToolTip": "Configure Anthropic API access",
         }
 
     def IsActive(self):
@@ -80,7 +80,7 @@ class AddAnthropicProviderCommand:
     def Activated(self):
         """Execute the command"""
         try:
-            dialog = APIKeyInputDialog('anthropic')
+            dialog = APIKeyInputDialog("anthropic")
             dialog.exec()
         except Exception as e:
             logger.error("Failed to open Anthropic configuration: %s", str(e))
@@ -93,9 +93,9 @@ class AddOllamaProviderCommand:
     def GetResources(self):
         """Return command resources"""
         return {
-            'Pixmap': 'ai_ollama.svg',
-            'MenuText': 'Add Ollama',
-            'ToolTip': 'Configure local Ollama access'
+            "Pixmap": "ai_ollama.svg",
+            "MenuText": "Add Ollama",
+            "ToolTip": "Configure local Ollama access",
         }
 
     def IsActive(self):
@@ -105,7 +105,7 @@ class AddOllamaProviderCommand:
     def Activated(self):
         """Execute the command"""
         try:
-            dialog = APIKeyInputDialog('ollama')
+            dialog = APIKeyInputDialog("ollama")
             dialog.exec()
         except Exception as e:
             logger.error("Failed to open Ollama configuration: %s", str(e))
@@ -113,7 +113,7 @@ class AddOllamaProviderCommand:
 
 
 # Register commands
-Gui.addCommand('AI_ProviderManager', ProviderManagerCommand())
-Gui.addCommand('AI_AddOpenAI', AddOpenAIProviderCommand())
-Gui.addCommand('AI_AddAnthropic', AddAnthropicProviderCommand())
-Gui.addCommand('AI_AddOllama', AddOllamaProviderCommand())
+Gui.addCommand("AI_ProviderManager", ProviderManagerCommand())
+Gui.addCommand("AI_AddOpenAI", AddOpenAIProviderCommand())
+Gui.addCommand("AI_AddAnthropic", AddAnthropicProviderCommand())
+Gui.addCommand("AI_AddOllama", AddOllamaProviderCommand())

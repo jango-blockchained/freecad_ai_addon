@@ -3,7 +3,7 @@ import FreeCADGui as Gui
 import FreeCAD as App
 from ..utils.logging import get_logger
 
-logger = get_logger('workbench')
+logger = get_logger("workbench")
 
 
 class AIWorkbench(Gui.Workbench):
@@ -11,11 +11,11 @@ class AIWorkbench(Gui.Workbench):
 
     MenuText = "AI Assistant"
     ToolTip = "AI-powered design assistant with conversation and agent capabilities"
-    
+
     def __init__(self):
         """Initialize the AI Workbench"""
         logger.info("Initializing AI Workbench")
-        
+
         # Set icon path
         self._set_icon_path()
 
@@ -24,8 +24,10 @@ class AIWorkbench(Gui.Workbench):
         try:
             # Get the addon directory
             addon_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            icon_path = os.path.join(addon_dir, "resources", "icons", "freecad_ai_addon.svg")
-            
+            icon_path = os.path.join(
+                addon_dir, "resources", "icons", "freecad_ai_addon.svg"
+            )
+
             if os.path.exists(icon_path):
                 self.Icon = icon_path
                 logger.info(f"Workbench icon set to: {icon_path}")
@@ -51,19 +53,16 @@ class AIWorkbench(Gui.Workbench):
 
         except Exception as e:
             logger.error("Failed to initialize AI Workbench: %s", str(e))
-            App.Console.PrintError(
-                f"AI Workbench initialization failed: {e}\n")
+            App.Console.PrintError(f"AI Workbench initialization failed: {e}\n")
 
     def _create_toolbars(self):
         """Create toolbars for the workbench"""
         try:
             # Import and register commands first
             self._register_commands()
-            
+
             # Main AI toolbar
-            self.appendToolbar("AI Assistant", [
-                "AI_OpenChat"
-            ])
+            self.appendToolbar("AI Assistant", ["AI_OpenChat"])
 
             logger.info("AI toolbars created")
         except Exception as e:
@@ -84,10 +83,10 @@ class AIWorkbench(Gui.Workbench):
         try:
             # Import and register the basic chat command
             from .commands import OpenChatCommand
-            
+
             # Register commands with FreeCAD
-            Gui.addCommand('AI_OpenChat', OpenChatCommand())
-            
+            Gui.addCommand("AI_OpenChat", OpenChatCommand())
+
             logger.info("AI commands registered")
         except Exception as e:
             logger.error("Failed to register commands: %s", str(e))

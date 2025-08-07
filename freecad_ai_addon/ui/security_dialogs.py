@@ -10,7 +10,7 @@ from PySide6 import QtWidgets, QtCore
 from freecad_ai_addon.utils.security import get_credential_manager
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('security_ui')
+logger = get_logger("security_ui")
 
 
 class APIKeyInputDialog(QtWidgets.QDialog):
@@ -41,7 +41,9 @@ class APIKeyInputDialog(QtWidgets.QDialog):
 
         # Header
         header_label = QtWidgets.QLabel(f"Configure {self.provider.title()} API Access")
-        header_label.setStyleSheet("font-size: 14px; font-weight: bold; margin-bottom: 10px;")
+        header_label.setStyleSheet(
+            "font-size: 14px; font-weight: bold; margin-bottom: 10px;"
+        )
         layout.addWidget(header_label)
 
         # Description
@@ -107,34 +109,36 @@ class APIKeyInputDialog(QtWidgets.QDialog):
     def _get_provider_description(self) -> str:
         """Get description text for the provider"""
         descriptions = {
-            'openai': (
+            "openai": (
                 "Enter your OpenAI API key to access GPT models. "
                 "You can find your API key at https://platform.openai.com/api-keys"
             ),
-            'anthropic': (
+            "anthropic": (
                 "Enter your Anthropic API key to access Claude models. "
                 "You can find your API key at https://console.anthropic.com/"
             ),
-            'ollama': (
+            "ollama": (
                 "Configure connection to your local Ollama instance. "
                 "Make sure Ollama is running on your system."
-            )
+            ),
         }
-        return descriptions.get(self.provider, "Enter credentials for this AI provider.")
+        return descriptions.get(
+            self.provider, "Enter credentials for this AI provider."
+        )
 
     def _add_provider_specific_fields(self, form_layout: QtWidgets.QFormLayout):
         """Add provider-specific input fields"""
-        if self.provider == 'openai':
+        if self.provider == "openai":
             # Organization ID (optional)
             self.org_id_input = QtWidgets.QLineEdit()
             self.org_id_input.setPlaceholderText("Optional: Organization ID")
             form_layout.addRow("Organization ID:", self.org_id_input)
 
-        elif self.provider == 'anthropic':
+        elif self.provider == "anthropic":
             # No additional fields for Anthropic currently
             pass
 
-        elif self.provider == 'ollama':
+        elif self.provider == "ollama":
             # Base URL for Ollama
             self.base_url_input = QtWidgets.QLineEdit()
             self.base_url_input.setPlaceholderText("http://localhost:11434")
@@ -145,19 +149,21 @@ class APIKeyInputDialog(QtWidgets.QDialog):
         """Load existing credentials into the form"""
         try:
             # Load API key
-            api_key = self.credential_manager.get_credential(self.provider, 'api_key')
+            api_key = self.credential_manager.get_credential(self.provider, "api_key")
             if api_key:
                 self.api_key_input.setText(api_key)
 
             # Load provider-specific credentials
-            if self.provider == 'openai':
-                org_id = self.credential_manager.get_credential(self.provider, 'org_id')
-                if org_id and hasattr(self, 'org_id_input'):
+            if self.provider == "openai":
+                org_id = self.credential_manager.get_credential(self.provider, "org_id")
+                if org_id and hasattr(self, "org_id_input"):
                     self.org_id_input.setText(org_id)
 
-            elif self.provider == 'ollama':
-                base_url = self.credential_manager.get_credential(self.provider, 'base_url')
-                if base_url and hasattr(self, 'base_url_input'):
+            elif self.provider == "ollama":
+                base_url = self.credential_manager.get_credential(
+                    self.provider, "base_url"
+                )
+                if base_url and hasattr(self, "base_url_input"):
                     self.base_url_input.setText(base_url)
 
         except Exception as e:
@@ -182,7 +188,7 @@ class APIKeyInputDialog(QtWidgets.QDialog):
 
             # TODO: Implement actual connection testing
             # For now, just basic validation
-            if not credentials.get('api_key') and self.provider != 'ollama':
+            if not credentials.get("api_key") and self.provider != "ollama":
                 self._show_status("API key is required", error=True)
                 return
 
@@ -214,18 +220,18 @@ class APIKeyInputDialog(QtWidgets.QDialog):
         # API key
         api_key = self.api_key_input.text().strip()
         if api_key:
-            credentials['api_key'] = api_key
+            credentials["api_key"] = api_key
 
         # Provider-specific fields
-        if self.provider == 'openai' and hasattr(self, 'org_id_input'):
+        if self.provider == "openai" and hasattr(self, "org_id_input"):
             org_id = self.org_id_input.text().strip()
             if org_id:
-                credentials['org_id'] = org_id
+                credentials["org_id"] = org_id
 
-        elif self.provider == 'ollama' and hasattr(self, 'base_url_input'):
+        elif self.provider == "ollama" and hasattr(self, "base_url_input"):
             base_url = self.base_url_input.text().strip()
             if base_url:
-                credentials['base_url'] = base_url
+                credentials["base_url"] = base_url
 
         return credentials
 
@@ -236,7 +242,7 @@ class APIKeyInputDialog(QtWidgets.QDialog):
             "Remove Credentials",
             f"Are you sure you want to remove all stored credentials for {self.provider.title()}?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
 
         if reply == QtWidgets.QMessageBox.Yes:
@@ -246,9 +252,9 @@ class APIKeyInputDialog(QtWidgets.QDialog):
 
                 # Clear form
                 self.api_key_input.clear()
-                if hasattr(self, 'org_id_input'):
+                if hasattr(self, "org_id_input"):
                     self.org_id_input.clear()
-                if hasattr(self, 'base_url_input'):
+                if hasattr(self, "base_url_input"):
                     self.base_url_input.setText("http://localhost:11434")
 
             except Exception as e:
@@ -260,13 +266,15 @@ class APIKeyInputDialog(QtWidgets.QDialog):
             credentials = self._get_form_credentials()
 
             # Validate required fields
-            if not credentials.get('api_key') and self.provider != 'ollama':
+            if not credentials.get("api_key") and self.provider != "ollama":
                 self._show_status("API key is required", error=True)
                 return
 
             # Save credentials
             for cred_type, value in credentials.items():
-                if not self.credential_manager.store_credential(self.provider, cred_type, value):
+                if not self.credential_manager.store_credential(
+                    self.provider, cred_type, value
+                ):
                     self._show_status(f"Failed to save {cred_type}", error=True)
                     return
 
@@ -298,7 +306,9 @@ class ProviderManagerDialog(QtWidgets.QDialog):
 
         # Header
         header_label = QtWidgets.QLabel("Manage AI Provider Credentials")
-        header_label.setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;")
+        header_label.setStyleSheet(
+            "font-size: 16px; font-weight: bold; margin-bottom: 10px;"
+        )
         layout.addWidget(header_label)
 
         # Provider list
@@ -316,13 +326,13 @@ class ProviderManagerDialog(QtWidgets.QDialog):
         add_layout = QtWidgets.QHBoxLayout()
 
         self.add_openai_btn = QtWidgets.QPushButton("Add OpenAI")
-        self.add_openai_btn.clicked.connect(lambda: self._add_provider('openai'))
+        self.add_openai_btn.clicked.connect(lambda: self._add_provider("openai"))
 
         self.add_anthropic_btn = QtWidgets.QPushButton("Add Anthropic")
-        self.add_anthropic_btn.clicked.connect(lambda: self._add_provider('anthropic'))
+        self.add_anthropic_btn.clicked.connect(lambda: self._add_provider("anthropic"))
 
         self.add_ollama_btn = QtWidgets.QPushButton("Add Ollama")
-        self.add_ollama_btn.clicked.connect(lambda: self._add_provider('ollama'))
+        self.add_ollama_btn.clicked.connect(lambda: self._add_provider("ollama"))
 
         add_layout.addWidget(self.add_openai_btn)
         add_layout.addWidget(self.add_anthropic_btn)
@@ -410,7 +420,9 @@ class ProviderManagerDialog(QtWidgets.QDialog):
             details += "Configured Credentials:\n"
 
             for cred_type in cred_types:
-                is_valid = self.credential_manager.validate_credential(provider, cred_type)
+                is_valid = self.credential_manager.validate_credential(
+                    provider, cred_type
+                )
                 status = "✓ Valid" if is_valid else "⚠ Invalid"
                 details += f"  • {cred_type}: {status}\n"
 
@@ -452,7 +464,7 @@ class ProviderManagerDialog(QtWidgets.QDialog):
         QtWidgets.QMessageBox.information(
             self,
             "Test Connection",
-            f"Connection test for {provider.title()} would be performed here."
+            f"Connection test for {provider.title()} would be performed here.",
         )
 
     def _remove_provider(self):
@@ -468,7 +480,7 @@ class ProviderManagerDialog(QtWidgets.QDialog):
             "Remove Provider",
             f"Are you sure you want to remove {provider.title()} and all its credentials?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
 
         if reply == QtWidgets.QMessageBox.Yes:
@@ -479,12 +491,10 @@ class ProviderManagerDialog(QtWidgets.QDialog):
                 QtWidgets.QMessageBox.information(
                     self,
                     "Provider Removed",
-                    f"{provider.title()} credentials have been removed successfully."
+                    f"{provider.title()} credentials have been removed successfully.",
                 )
 
             except Exception as e:
                 QtWidgets.QMessageBox.critical(
-                    self,
-                    "Error",
-                    f"Failed to remove provider: {str(e)}"
+                    self, "Error", f"Failed to remove provider: {str(e)}"
                 )

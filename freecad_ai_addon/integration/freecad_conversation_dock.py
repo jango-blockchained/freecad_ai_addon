@@ -8,16 +8,12 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from PySide6 import QtWidgets, QtCore
 
-from freecad_ai_addon.ui.enhanced_conversation_widget import (
-    EnhancedConversationWidget
-)
-from freecad_ai_addon.integration.context_providers import (
-    FreeCADContextProvider
-)
+from freecad_ai_addon.ui.enhanced_conversation_widget import EnhancedConversationWidget
+from freecad_ai_addon.integration.context_providers import FreeCADContextProvider
 from freecad_ai_addon.core.provider_manager import get_provider_manager
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('freecad_conversation_dock')
+logger = get_logger("freecad_conversation_dock")
 
 
 class FreeCADConversationDock(QtWidgets.QDockWidget):
@@ -61,23 +57,22 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
 
         # Set dock features
         self.setFeatures(
-            QtWidgets.QDockWidget.DockWidgetMovable |
-            QtWidgets.QDockWidget.DockWidgetFloatable |
-            QtWidgets.QDockWidget.DockWidgetClosable
+            QtWidgets.QDockWidget.DockWidgetMovable
+            | QtWidgets.QDockWidget.DockWidgetFloatable
+            | QtWidgets.QDockWidget.DockWidgetClosable
         )
 
     def _connect_signals(self):
         """Connect conversation widget signals"""
         # Get the underlying conversation widget from enhanced widget
-        self._conv_widget.message_sent.connect(
-            self._handle_user_message
-        )
+        self._conv_widget.message_sent.connect(self._handle_user_message)
 
         # Connect to FreeCAD selection changes
         try:
             from freecad_ai_addon.integration.freecad_integration import (
-                setup_selection_observer
+                setup_selection_observer,
             )
+
             setup_selection_observer(self._on_selection_changed)
         except ImportError:
             logger.warning("FreeCAD integration not available")
@@ -96,17 +91,15 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
 
         except Exception as e:
             logger.error("Error handling user message: %s", str(e))
-            self._conv_widget.add_error_message(
-                f"Error processing message: {str(e)}"
-            )
+            self._conv_widget.add_error_message(f"Error processing message: {str(e)}")
 
     def _create_enhanced_message(self, user_text: str, context: dict) -> str:
         """Create enhanced message with FreeCAD context"""
         enhanced_parts = [user_text]
 
         # Add document context if available
-        if context.get('active_document'):
-            doc_info = context['active_document']
+        if context.get("active_document"):
+            doc_info = context["active_document"]
             enhanced_parts.append(
                 f"\n\n**Current FreeCAD Context:**\n"
                 f"- Document: {doc_info.get('name', 'Unknown')}\n"
@@ -114,18 +107,16 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
             )
 
         # Add selection context
-        if context.get('selection'):
-            selection_info = context['selection']
-            if selection_info.get('objects'):
+        if context.get("selection"):
+            selection_info = context["selection"]
+            if selection_info.get("objects"):
                 enhanced_parts.append(
                     f"- Selected: {', '.join(selection_info['objects'])}\n"
                 )
 
         # Add workspace context
-        if context.get('workbench'):
-            enhanced_parts.append(
-                f"- Active Workbench: {context['workbench']}\n"
-            )
+        if context.get("workbench"):
+            enhanced_parts.append(f"- Active Workbench: {context['workbench']}\n")
 
         return "".join(enhanced_parts)
 
@@ -157,10 +148,7 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
             response = await provider.send_message(message, attachments)
 
             # Add response to conversation
-            self._conv_widget.add_assistant_message(
-                response,
-                provider=provider_name
-            )
+            self._conv_widget.add_assistant_message(response, provider=provider_name)
 
         except Exception as e:
             logger.error("Error sending to AI provider: %s", str(e))
@@ -172,12 +160,10 @@ class FreeCADConversationDock(QtWidgets.QDockWidget):
         """Handle FreeCAD selection changes"""
         try:
             # Optionally show selection context in conversation
-            if selection_info.get('objects'):
+            if selection_info.get("objects"):
                 # Context message could be used for system notifications
                 # For now, just log the selection change
-                logger.debug(
-                    "Selection changed: %s", selection_info['objects']
-                )
+                logger.debug("Selection changed: %s", selection_info["objects"])
 
         except Exception as e:
             logger.error("Error handling selection change: %s", str(e))
@@ -212,10 +198,10 @@ class FreeCADConversationCommand:
     def GetResources(self):
         """Return command resources"""
         return {
-            'Pixmap': 'freecad_ai_addon.svg',
-            'MenuText': 'AI Chat',
-            'ToolTip': 'Open AI conversation interface',
-            'Accel': 'Ctrl+Shift+A'
+            "Pixmap": "freecad_ai_addon.svg",
+            "MenuText": "AI Chat",
+            "ToolTip": "Open AI conversation interface",
+            "Accel": "Ctrl+Shift+A",
         }
 
     def IsActive(self):
@@ -261,10 +247,10 @@ class FreeCADAgentModeCommand:
     def GetResources(self):
         """Return command resources"""
         return {
-            'Pixmap': 'freecad_ai_addon.svg',
-            'MenuText': 'AI Agent Mode',
-            'ToolTip': 'Activate autonomous AI agent for FreeCAD operations',
-            'Accel': 'Ctrl+Shift+G'
+            "Pixmap": "freecad_ai_addon.svg",
+            "MenuText": "AI Agent Mode",
+            "ToolTip": "Activate autonomous AI agent for FreeCAD operations",
+            "Accel": "Ctrl+Shift+G",
         }
 
     def IsActive(self):
@@ -310,8 +296,8 @@ class FreeCADAgentModeCommand:
 def register_freecad_commands():
     """Register FreeCAD commands"""
     try:
-        Gui.addCommand('AI_OpenChat', FreeCADConversationCommand())
-        Gui.addCommand('AI_AgentMode', FreeCADAgentModeCommand())
+        Gui.addCommand("AI_OpenChat", FreeCADConversationCommand())
+        Gui.addCommand("AI_AgentMode", FreeCADAgentModeCommand())
 
         logger.info("FreeCAD AI commands registered successfully")
 
@@ -323,9 +309,7 @@ def register_freecad_commands():
 def get_conversation_dock() -> FreeCADConversationDock:
     """Get existing conversation dock or create new one"""
     main_window = Gui.getMainWindow()
-    dock = main_window.findChild(
-        FreeCADConversationDock, "AI_Conversation_Dock"
-    )
+    dock = main_window.findChild(FreeCADConversationDock, "AI_Conversation_Dock")
 
     if dock is None:
         dock = FreeCADConversationDock(main_window)

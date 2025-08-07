@@ -14,15 +14,26 @@ from enum import Enum
 from PySide6 import QtWidgets
 from PySide6.QtCore import Signal, QTimer, QThread, pyqtSignal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox,
-    QTextEdit, QMessageBox, QFrame, QGroupBox
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QSpinBox,
+    QDoubleSpinBox,
+    QComboBox,
+    QCheckBox,
+    QTextEdit,
+    QMessageBox,
+    QFrame,
+    QGroupBox,
 )
 from PySide6.QtGui import QFont
 
 try:
     import FreeCAD as App
     import FreeCADGui as Gui
+
     FREECAD_AVAILABLE = True
 except ImportError:
     FREECAD_AVAILABLE = False
@@ -31,11 +42,12 @@ except ImportError:
 
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('interactive_elements')
+logger = get_logger("interactive_elements")
 
 
 class CodeExecutionStatus(Enum):
     """Status of code execution"""
+
     READY = "ready"
     EXECUTING = "executing"
     SUCCESS = "success"
@@ -46,6 +58,7 @@ class CodeExecutionStatus(Enum):
 @dataclass
 class ExecutionResult:
     """Result of code execution"""
+
     status: CodeExecutionStatus
     output: Optional[str] = None
     error: Optional[str] = None
@@ -59,6 +72,7 @@ class ExecutionResult:
 
 class CodeExecutionWorker(QThread):
     """Worker thread for safe code execution"""
+
     finished = pyqtSignal(ExecutionResult)
     progress = pyqtSignal(str)
 
@@ -72,29 +86,29 @@ class CodeExecutionWorker(QThread):
         """Execute code in separate thread"""
         if not FREECAD_AVAILABLE:
             self.result = ExecutionResult(
-                CodeExecutionStatus.ERROR,
-                error="FreeCAD not available"
+                CodeExecutionStatus.ERROR, error="FreeCAD not available"
             )
             self.finished.emit(self.result)
             return
 
         try:
             import time
+
             start_time = time.time()
 
             self.progress.emit("Preparing execution environment...")
 
             # Create execution context
             exec_globals = {
-                'App': App,
-                'Gui': Gui,
-                '__builtins__': __builtins__,
-                'created_objects': []
+                "App": App,
+                "Gui": Gui,
+                "__builtins__": __builtins__,
+                "created_objects": [],
             }
 
             # Add object tracking for preview mode
             if self.preview_mode:
-                exec_globals['_preview_objects'] = []
+                exec_globals["_preview_objects"] = []
                 # Monkey patch object creation for tracking
                 if App.ActiveDocument:
                     original_add_object = App.ActiveDocument.addObject
@@ -104,8 +118,8 @@ class CodeExecutionWorker(QThread):
                 def tracked_add_object(*args, **kwargs):
                     if original_add_object:
                         obj = original_add_object(*args, **kwargs)
-                        exec_globals['_preview_objects'].append(obj.Name)
-                        exec_globals['created_objects'].append(obj.Name)
+                        exec_globals["_preview_objects"].append(obj.Name)
+                        exec_globals["created_objects"].append(obj.Name)
                         return obj
                     return None
 
@@ -118,8 +132,7 @@ class CodeExecutionWorker(QThread):
             exec(self.code, exec_globals)
 
             # Restore original function if in preview mode
-            if (self.preview_mode and App.ActiveDocument and
-                    original_add_object):
+            if self.preview_mode and App.ActiveDocument and original_add_object:
                 App.ActiveDocument.addObject = original_add_object
 
             # Recompute document
@@ -131,8 +144,8 @@ class CodeExecutionWorker(QThread):
             self.result = ExecutionResult(
                 CodeExecutionStatus.SUCCESS,
                 output=f"Code executed successfully in {execution_time:.2f}s",
-                created_objects=exec_globals.get('created_objects', []),
-                execution_time=execution_time
+                created_objects=exec_globals.get("created_objects", []),
+                execution_time=execution_time,
             )
 
             if self.preview_mode:
@@ -142,16 +155,14 @@ class CodeExecutionWorker(QThread):
             error_msg = f"Execution error: {str(e)}\n{traceback.format_exc()}"
             logger.error(f"Code execution failed: {error_msg}")
 
-            self.result = ExecutionResult(
-                CodeExecutionStatus.ERROR,
-                error=error_msg
-            )
+            self.result = ExecutionResult(CodeExecutionStatus.ERROR, error=error_msg)
 
         self.finished.emit(self.result)
 
 
 class ExecuteCodeButton(QPushButton):
     """Interactive button for executing AI-generated code"""
+
     execution_finished = Signal(ExecutionResult)
 
     def __init__(self, code_content: str, parent=None):
@@ -167,7 +178,8 @@ class ExecuteCodeButton(QPushButton):
         """Set up button UI"""
         self.setFont(QFont("", 9, QFont.Bold))
         self.setMinimumHeight(32)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
@@ -185,7 +197,8 @@ class ExecuteCodeButton(QPushButton):
                 background-color: #cccccc;
                 color: #666666;
             }
-        """)
+        """
+        )
 
     def _connect_signals(self):
         """Connect button signals"""
@@ -205,17 +218,17 @@ class ExecuteCodeButton(QPushButton):
         """Execute the code"""
         if not FREECAD_AVAILABLE:
             QMessageBox.warning(
-                self, "FreeCAD Required",
-                "FreeCAD is required for code execution"
+                self, "FreeCAD Required", "FreeCAD is required for code execution"
             )
             return
 
         if not App.ActiveDocument:
             # Ask user if they want to create a new document
             reply = QMessageBox.question(
-                self, "No Active Document",
+                self,
+                "No Active Document",
                 "No FreeCAD document is open. Create a new one?",
-                QMessageBox.Yes | QMessageBox.No
+                QMessageBox.Yes | QMessageBox.No,
             )
             if reply == QMessageBox.Yes:
                 App.newDocument("AI_Generated")
@@ -228,9 +241,7 @@ class ExecuteCodeButton(QPushButton):
         self.setText(text)
 
         # Start execution in worker thread
-        self.execution_worker = CodeExecutionWorker(
-            self.code, self.preview_mode
-        )
+        self.execution_worker = CodeExecutionWorker(self.code, self.preview_mode)
         self.execution_worker.finished.connect(self._on_execution_finished)
         self.execution_worker.progress.connect(self._on_progress)
         self.execution_worker.start()
@@ -274,10 +285,17 @@ class ExecuteCodeButton(QPushButton):
 
 class ParameterWidget(QWidget):
     """Widget for adjusting parameters with live preview"""
+
     value_changed = Signal(str, object)  # parameter_name, new_value
 
-    def __init__(self, param_name: str, param_type: str,
-                 default_value: Any, range_info: Dict = None, parent=None):
+    def __init__(
+        self,
+        param_name: str,
+        param_type: str,
+        default_value: Any,
+        range_info: Dict = None,
+        parent=None,
+    ):
         super().__init__(parent)
         self.param_name = param_name
         self.param_type = param_type
@@ -412,14 +430,16 @@ class InteractiveCodeBlock(QFrame):
         code_display.setPlainText(self.code)
         code_display.setMaximumHeight(200)
         code_display.setFont(QFont("Consolas, Monaco, monospace", 9))
-        code_display.setStyleSheet("""
+        code_display.setStyleSheet(
+            """
             QTextEdit {
                 background-color: #f8f8f8;
                 border: 1px solid #ddd;
                 border-radius: 4px;
                 padding: 8px;
             }
-        """)
+        """
+        )
         layout.addWidget(code_display)
 
         # Parameters section
@@ -433,7 +453,7 @@ class InteractiveCodeBlock(QFrame):
                     param_name,
                     param_info.get("type", "str"),
                     param_info.get("default", ""),
-                    param_info.get("range", {})
+                    param_info.get("range", {}),
                 )
                 param_widget.value_changed.connect(self._on_parameter_changed)
                 params_layout.addWidget(param_widget)
@@ -444,16 +464,12 @@ class InteractiveCodeBlock(QFrame):
         # Action buttons
         button_layout = QHBoxLayout()
 
-        self.preview_button = ExecuteCodeButton(
-            self._get_parameterized_code())
+        self.preview_button = ExecuteCodeButton(self._get_parameterized_code())
         self.preview_button.set_preview_mode(True)
-        self.preview_button.execution_finished.connect(
-            self._on_preview_finished)
+        self.preview_button.execution_finished.connect(self._on_preview_finished)
 
-        self.execute_button = ExecuteCodeButton(
-            self._get_parameterized_code())
-        self.execute_button.execution_finished.connect(
-            self._on_execution_finished)
+        self.execute_button = ExecuteCodeButton(self._get_parameterized_code())
+        self.execute_button.execution_finished.connect(self._on_execution_finished)
         button_layout.addWidget(self.execute_button)
 
         copy_button = QPushButton("Copy Code")
@@ -475,8 +491,9 @@ class InteractiveCodeBlock(QFrame):
     def _extract_parameters(self):
         """Extract parameters from code comments or docstrings"""
         # Look for parameter hints in comments
-        param_pattern = (r'#\s*@param\s+(\w+):\s*(\w+)\s*=\s*([^,\n]+)'
-                         r'(?:,\s*range=\((.*?)\))?')
+        param_pattern = (
+            r"#\s*@param\s+(\w+):\s*(\w+)\s*=\s*([^,\n]+)" r"(?:,\s*range=\((.*?)\))?"
+        )
         matches = re.findall(param_pattern, self.code)
 
         for match in matches:
@@ -493,7 +510,7 @@ class InteractiveCodeBlock(QFrame):
             self.parameters[param_name] = {
                 "type": param_type,
                 "default": default_value,
-                "range": range_info
+                "range": range_info,
             }
 
     def _on_parameter_changed(self, param_name: str, value: Any):
@@ -536,8 +553,7 @@ class InteractiveCodeBlock(QFrame):
         """Handle preview execution completion"""
         if result.status == CodeExecutionStatus.PREVIEW:
             objects_count = len(result.created_objects)
-            self.status_label.setText(
-                f"Preview completed ({objects_count} objects)")
+            self.status_label.setText(f"Preview completed ({objects_count} objects)")
         else:
             self.status_label.setText("Preview failed")
 
@@ -545,8 +561,7 @@ class InteractiveCodeBlock(QFrame):
         """Handle execution completion"""
         if result.status == CodeExecutionStatus.SUCCESS:
             exec_time = result.execution_time
-            self.status_label.setText(
-                f"Executed successfully ({exec_time:.2f}s)")
+            self.status_label.setText(f"Executed successfully ({exec_time:.2f}s)")
         else:
             self.status_label.setText("Execution failed")
 
@@ -554,8 +569,7 @@ class InteractiveCodeBlock(QFrame):
 class ConfirmationDialog(QMessageBox):
     """Enhanced confirmation dialog for destructive operations"""
 
-    def __init__(self, operation: str, affected_objects: List[str],
-                 parent=None):
+    def __init__(self, operation: str, affected_objects: List[str], parent=None):
         super().__init__(parent)
         self.operation = operation
         self.affected_objects = affected_objects
@@ -592,24 +606,28 @@ def extract_code_blocks(text: str) -> List[Dict[str, str]]:
     code_blocks = []
 
     # Pattern for fenced code blocks
-    pattern = r'```(\w+)?\n(.*?)\n```'
+    pattern = r"```(\w+)?\n(.*?)\n```"
     matches = re.findall(pattern, text, re.DOTALL)
 
     for language, code in matches:
-        is_python = language.lower() in ['python', 'py', '']
-        has_freecad = 'App.' in code or 'Gui.' in code
+        is_python = language.lower() in ["python", "py", ""]
+        has_freecad = "App." in code or "Gui." in code
         if is_python and has_freecad:
-            code_blocks.append({
-                'language': language or 'python',
-                'code': code.strip(),
-                'executable': True
-            })
+            code_blocks.append(
+                {
+                    "language": language or "python",
+                    "code": code.strip(),
+                    "executable": True,
+                }
+            )
         else:
-            code_blocks.append({
-                'language': language or 'text',
-                'code': code.strip(),
-                'executable': False
-            })
+            code_blocks.append(
+                {
+                    "language": language or "text",
+                    "code": code.strip(),
+                    "executable": False,
+                }
+            )
 
     return code_blocks
 
@@ -623,7 +641,7 @@ def create_interactive_message_widget(message_text: str) -> QWidget:
     code_blocks = extract_code_blocks(message_text)
 
     # Add text content (simplified markdown rendering)
-    text_parts = re.split(r'```\w*\n.*?\n```', message_text, flags=re.DOTALL)
+    text_parts = re.split(r"```\w*\n.*?\n```", message_text, flags=re.DOTALL)
 
     for i, text_part in enumerate(text_parts):
         if text_part.strip():
@@ -632,8 +650,8 @@ def create_interactive_message_widget(message_text: str) -> QWidget:
             layout.addWidget(text_label)
 
         # Add interactive code block if available
-        if i < len(code_blocks) and code_blocks[i]['executable']:
-            interactive_block = InteractiveCodeBlock(code_blocks[i]['code'])
+        if i < len(code_blocks) and code_blocks[i]["executable"]:
+            interactive_block = InteractiveCodeBlock(code_blocks[i]["code"])
             layout.addWidget(interactive_block)
 
     return widget

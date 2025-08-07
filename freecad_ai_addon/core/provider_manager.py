@@ -14,11 +14,12 @@ from enum import Enum
 from freecad_ai_addon.utils.logging import get_logger
 from freecad_ai_addon.utils.config import ConfigManager
 
-logger = get_logger('provider_manager')
+logger = get_logger("provider_manager")
 
 
 class ProviderType(Enum):
     """Enumeration of supported AI provider types"""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     LOCAL_OLLAMA = "local_ollama"
@@ -27,6 +28,7 @@ class ProviderType(Enum):
 
 class MessageRole(Enum):
     """Enumeration of message roles"""
+
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
@@ -35,6 +37,7 @@ class MessageRole(Enum):
 @dataclass
 class ChatMessage:
     """Represents a chat message"""
+
     role: MessageRole
     content: str
     metadata: Optional[Dict[str, Any]] = None
@@ -43,6 +46,7 @@ class ChatMessage:
 @dataclass
 class ProviderCapabilities:
     """Represents capabilities of an AI provider"""
+
     supports_chat: bool = True
     supports_streaming: bool = False
     supports_tools: bool = False
@@ -59,6 +63,7 @@ class ProviderCapabilities:
 @dataclass
 class ProviderConfig:
     """Configuration for an AI provider"""
+
     name: str
     provider_type: ProviderType
     api_key: Optional[str] = None
@@ -85,11 +90,14 @@ class AIProvider(ABC):
         pass
 
     @abstractmethod
-    async def chat(self, messages: List[ChatMessage],
-                   model: Optional[str] = None,
-                   max_tokens: Optional[int] = None,
-                   temperature: Optional[float] = None,
-                   **kwargs) -> str:
+    async def chat(
+        self,
+        messages: List[ChatMessage],
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        **kwargs,
+    ) -> str:
         """Send a chat request and get response"""
         pass
 
@@ -121,7 +129,7 @@ class OpenAIProvider(AIProvider):
             supports_images=True,
             max_tokens=4096,
             context_length=128000,
-            models=["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"]
+            models=["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
         )
 
     async def initialize(self) -> None:
@@ -131,8 +139,7 @@ class OpenAIProvider(AIProvider):
             import openai
 
             self.client = openai.AsyncOpenAI(
-                api_key=self.config.api_key,
-                base_url=self.config.base_url
+                api_key=self.config.api_key, base_url=self.config.base_url
             )
 
             logger.info("OpenAI provider initialized for %s", self.config.name)
@@ -143,11 +150,14 @@ class OpenAIProvider(AIProvider):
             logger.error("Failed to initialize OpenAI provider: %s", str(e))
             raise
 
-    async def chat(self, messages: List[ChatMessage],
-                   model: Optional[str] = None,
-                   max_tokens: Optional[int] = None,
-                   temperature: Optional[float] = None,
-                   **kwargs) -> str:
+    async def chat(
+        self,
+        messages: List[ChatMessage],
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        **kwargs,
+    ) -> str:
         """Send chat request to OpenAI"""
         if not self.client:
             raise RuntimeError("Provider not initialized")
@@ -155,8 +165,7 @@ class OpenAIProvider(AIProvider):
         try:
             # Convert messages to OpenAI format
             openai_messages = [
-                {"role": msg.role.value, "content": msg.content}
-                for msg in messages
+                {"role": msg.role.value, "content": msg.content} for msg in messages
             ]
 
             response = await self.client.chat.completions.create(
@@ -164,7 +173,7 @@ class OpenAIProvider(AIProvider):
                 messages=openai_messages,
                 max_tokens=max_tokens or self.capabilities.max_tokens,
                 temperature=temperature or 0.7,
-                **kwargs
+                **kwargs,
             )
 
             return response.choices[0].message.content
@@ -208,8 +217,11 @@ class AnthropicProvider(AIProvider):
             supports_images=True,
             max_tokens=4096,
             context_length=200000,
-            models=["claude-3-opus-20240229", "claude-3-sonnet-20240229",
-                   "claude-3-haiku-20240307"]
+            models=[
+                "claude-3-opus-20240229",
+                "claude-3-sonnet-20240229",
+                "claude-3-haiku-20240307",
+            ],
         )
 
     async def initialize(self) -> None:
@@ -218,8 +230,7 @@ class AnthropicProvider(AIProvider):
             import anthropic
 
             self.client = anthropic.AsyncAnthropic(
-                api_key=self.config.api_key,
-                base_url=self.config.base_url
+                api_key=self.config.api_key, base_url=self.config.base_url
             )
 
             logger.info("Anthropic provider initialized for %s", self.config.name)
@@ -230,11 +241,14 @@ class AnthropicProvider(AIProvider):
             logger.error("Failed to initialize Anthropic provider: %s", str(e))
             raise
 
-    async def chat(self, messages: List[ChatMessage],
-                   model: Optional[str] = None,
-                   max_tokens: Optional[int] = None,
-                   temperature: Optional[float] = None,
-                   **kwargs) -> str:
+    async def chat(
+        self,
+        messages: List[ChatMessage],
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        **kwargs,
+    ) -> str:
         """Send chat request to Anthropic"""
         if not self.client:
             raise RuntimeError("Provider not initialized")
@@ -248,10 +262,9 @@ class AnthropicProvider(AIProvider):
                 if msg.role == MessageRole.SYSTEM:
                     system_message = msg.content
                 else:
-                    anthropic_messages.append({
-                        "role": msg.role.value,
-                        "content": msg.content
-                    })
+                    anthropic_messages.append(
+                        {"role": msg.role.value, "content": msg.content}
+                    )
 
             response = await self.client.messages.create(
                 model=model or self.config.model or "claude-3-sonnet-20240229",
@@ -259,7 +272,7 @@ class AnthropicProvider(AIProvider):
                 max_tokens=max_tokens or self.capabilities.max_tokens,
                 temperature=temperature or 0.7,
                 system=system_message,
-                **kwargs
+                **kwargs,
             )
 
             return response.content[0].text
@@ -296,7 +309,7 @@ class LocalOllamaProvider(AIProvider):
             supports_images=False,
             max_tokens=2048,
             context_length=4096,
-            models=[]  # Will be populated dynamically
+            models=[],  # Will be populated dynamically
         )
 
     async def initialize(self) -> None:
@@ -317,30 +330,34 @@ class LocalOllamaProvider(AIProvider):
             logger.error("Failed to initialize Ollama provider: %s", str(e))
             raise
 
-    async def chat(self, messages: List[ChatMessage],
-                   model: Optional[str] = None,
-                   max_tokens: Optional[int] = None,
-                   temperature: Optional[float] = None,
-                   **kwargs) -> str:
+    async def chat(
+        self,
+        messages: List[ChatMessage],
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        **kwargs,
+    ) -> str:
         """Send chat request to Ollama"""
         if not self.client:
             raise RuntimeError("Provider not initialized")
 
         try:
             # Convert to single prompt for Ollama
-            prompt = "\n".join([
-                f"{msg.role.value}: {msg.content}" for msg in messages
-            ])
+            prompt = "\n".join([f"{msg.role.value}: {msg.content}" for msg in messages])
 
-            response = await self.client.post("/api/generate", json={
-                "model": model or self.config.model or "llama2",
-                "prompt": prompt,
-                "stream": False,
-                "options": {
-                    "num_predict": max_tokens or self.capabilities.max_tokens,
-                    "temperature": temperature or 0.7
-                }
-            })
+            response = await self.client.post(
+                "/api/generate",
+                json={
+                    "model": model or self.config.model or "llama2",
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "num_predict": max_tokens or self.capabilities.max_tokens,
+                        "temperature": temperature or 0.7,
+                    },
+                },
+            )
 
             response.raise_for_status()
             result = response.json()
@@ -419,7 +436,9 @@ class ProviderManager:
             providers_config = self.config_manager.get("providers", {})
             self.default_provider = providers_config.get("default")
 
-            for provider_name, provider_data in providers_config.get("list", {}).items():
+            for provider_name, provider_data in providers_config.get(
+                "list", {}
+            ).items():
                 config = ProviderConfig(
                     name=provider_name,
                     provider_type=ProviderType(provider_data.get("type")),
@@ -427,7 +446,7 @@ class ProviderManager:
                     base_url=provider_data.get("base_url"),
                     model=provider_data.get("model"),
                     enabled=provider_data.get("enabled", True),
-                    settings=provider_data.get("settings", {})
+                    settings=provider_data.get("settings", {}),
                 )
 
                 self.provider_configs[provider_name] = config
@@ -446,23 +465,34 @@ class ProviderManager:
             if config.enabled:
                 task = asyncio.create_task(
                     self._initialize_provider(provider_name, config),
-                    name=f"init_{provider_name}"
+                    name=f"init_{provider_name}",
                 )
                 initialization_tasks.append(task)
 
         if initialization_tasks:
-            results = await asyncio.gather(*initialization_tasks, return_exceptions=True)
+            results = await asyncio.gather(
+                *initialization_tasks, return_exceptions=True
+            )
 
             for i, (provider_name, config) in enumerate(
-                [(name, cfg) for name, cfg in self.provider_configs.items() if cfg.enabled]
+                [
+                    (name, cfg)
+                    for name, cfg in self.provider_configs.items()
+                    if cfg.enabled
+                ]
             ):
                 if isinstance(results[i], Exception):
-                    logger.error("Failed to initialize provider %s: %s",
-                               provider_name, str(results[i]))
+                    logger.error(
+                        "Failed to initialize provider %s: %s",
+                        provider_name,
+                        str(results[i]),
+                    )
                 else:
                     logger.info("Successfully initialized provider %s", provider_name)
 
-    async def _initialize_provider(self, provider_name: str, config: ProviderConfig) -> None:
+    async def _initialize_provider(
+        self, provider_name: str, config: ProviderConfig
+    ) -> None:
         """Initialize a single provider"""
         try:
             # Create provider instance based on type
@@ -511,10 +541,13 @@ class ProviderManager:
         """Get all provider configurations"""
         return self.provider_configs.copy()
 
-    async def chat(self, messages: List[ChatMessage],
-                   provider_name: Optional[str] = None,
-                   model: Optional[str] = None,
-                   **kwargs) -> str:
+    async def chat(
+        self,
+        messages: List[ChatMessage],
+        provider_name: Optional[str] = None,
+        model: Optional[str] = None,
+        **kwargs,
+    ) -> str:
         """
         Send a chat request using the specified or default provider.
 
@@ -569,10 +602,7 @@ class ProviderManager:
 
     async def _save_provider_configurations(self) -> None:
         """Save provider configurations to config"""
-        providers_config = {
-            "default": self.default_provider,
-            "list": {}
-        }
+        providers_config = {"default": self.default_provider, "list": {}}
 
         for provider_name, config in self.provider_configs.items():
             providers_config["list"][provider_name] = {
@@ -581,7 +611,7 @@ class ProviderManager:
                 "base_url": config.base_url,
                 "model": config.model,
                 "enabled": config.enabled,
-                "settings": config.settings
+                "settings": config.settings,
             }
 
         self.config_manager.set("providers", providers_config)
@@ -615,6 +645,7 @@ def get_provider_manager() -> ProviderManager:
     global _provider_manager
     if _provider_manager is None:
         from freecad_ai_addon.utils.config import ConfigManager
+
         config_manager = ConfigManager()
         _provider_manager = ProviderManager(config_manager)
     return _provider_manager

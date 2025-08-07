@@ -13,11 +13,12 @@ from dataclasses import dataclass
 from freecad_ai_addon.utils.security import get_credential_manager
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('provider_status')
+logger = get_logger("provider_status")
 
 
 class ProviderStatus(Enum):
     """Provider connection status enumeration"""
+
     UNKNOWN = "unknown"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -30,6 +31,7 @@ class ProviderStatus(Enum):
 @dataclass
 class ProviderHealth:
     """Provider health information"""
+
     status: ProviderStatus
     last_check: float
     response_time: Optional[float]
@@ -52,7 +54,9 @@ class ProviderMonitor:
 
         logger.info("Provider monitor initialized")
 
-    def register_status_callback(self, provider: str, callback: Callable[[ProviderHealth], None]):
+    def register_status_callback(
+        self, provider: str, callback: Callable[[ProviderHealth], None]
+    ):
         """
         Register a callback for provider status changes
 
@@ -65,7 +69,9 @@ class ProviderMonitor:
         self._status_callbacks[provider].append(callback)
         logger.debug("Registered status callback for provider %s", provider)
 
-    def unregister_status_callback(self, provider: str, callback: Callable[[ProviderHealth], None]):
+    def unregister_status_callback(
+        self, provider: str, callback: Callable[[ProviderHealth], None]
+    ):
         """
         Unregister a status callback
 
@@ -101,7 +107,7 @@ class ProviderMonitor:
                 error_message=None,
                 rate_limit_remaining=None,
                 rate_limit_reset=None,
-                usage_stats={}
+                usage_stats={},
             )
 
         return self._status_cache[provider]
@@ -129,8 +135,8 @@ class ProviderMonitor:
 
         try:
             # Get credentials
-            api_key = self.credential_manager.get_credential(provider, 'api_key')
-            if not api_key and provider != 'ollama':
+            api_key = self.credential_manager.get_credential(provider, "api_key")
+            if not api_key and provider != "ollama":
                 health = ProviderHealth(
                     status=ProviderStatus.DISCONNECTED,
                     last_check=start_time,
@@ -138,11 +144,13 @@ class ProviderMonitor:
                     error_message="No API key configured",
                     rate_limit_remaining=None,
                     rate_limit_reset=None,
-                    usage_stats={}
+                    usage_stats={},
                 )
             else:
                 # Perform actual connection test
-                health = await self._test_provider_connection(provider, api_key, start_time)
+                health = await self._test_provider_connection(
+                    provider, api_key, start_time
+                )
 
             # Cache the result
             self._status_cache[provider] = health
@@ -161,13 +169,15 @@ class ProviderMonitor:
                 error_message=str(e),
                 rate_limit_remaining=None,
                 rate_limit_reset=None,
-                usage_stats={}
+                usage_stats={},
             )
             self._status_cache[provider] = health
             await self._notify_status_callbacks(provider, health)
             return health
 
-    async def _test_provider_connection(self, provider: str, api_key: Optional[str], start_time: float) -> ProviderHealth:
+    async def _test_provider_connection(
+        self, provider: str, api_key: Optional[str], start_time: float
+    ) -> ProviderHealth:
         """
         Test connection to a specific provider
 
@@ -179,47 +189,57 @@ class ProviderMonitor:
         Returns:
             ProviderHealth object with test results
         """
-        if provider == 'openai':
+        if provider == "openai":
             return await self._test_openai_connection(api_key, start_time)
-        elif provider == 'anthropic':
+        elif provider == "anthropic":
             return await self._test_anthropic_connection(api_key, start_time)
-        elif provider == 'ollama':
+        elif provider == "ollama":
             return await self._test_ollama_connection(start_time)
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
-    async def _test_openai_connection(self, api_key: str, start_time: float) -> ProviderHealth:
+    async def _test_openai_connection(
+        self, api_key: str, start_time: float
+    ) -> ProviderHealth:
         """Test OpenAI connection"""
         try:
             import httpx
 
             headers = {
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json'
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
             }
 
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    'https://api.openai.com/v1/models',
-                    headers=headers,
-                    timeout=10.0
+                    "https://api.openai.com/v1/models", headers=headers, timeout=10.0
                 )
 
                 response_time = time.time() - start_time
 
                 if response.status_code == 200:
                     # Parse rate limit headers
-                    rate_limit_remaining = response.headers.get('x-ratelimit-remaining-requests')
-                    rate_limit_reset = response.headers.get('x-ratelimit-reset-requests')
+                    rate_limit_remaining = response.headers.get(
+                        "x-ratelimit-remaining-requests"
+                    )
+                    rate_limit_reset = response.headers.get(
+                        "x-ratelimit-reset-requests"
+                    )
 
                     return ProviderHealth(
                         status=ProviderStatus.CONNECTED,
                         last_check=start_time,
                         response_time=response_time,
                         error_message=None,
-                        rate_limit_remaining=int(rate_limit_remaining) if rate_limit_remaining else None,
-                        rate_limit_reset=float(rate_limit_reset) if rate_limit_reset else None,
-                        usage_stats={'models_available': len(response.json().get('data', []))}
+                        rate_limit_remaining=(
+                            int(rate_limit_remaining) if rate_limit_remaining else None
+                        ),
+                        rate_limit_reset=(
+                            float(rate_limit_reset) if rate_limit_reset else None
+                        ),
+                        usage_stats={
+                            "models_available": len(response.json().get("data", []))
+                        },
                     )
                 elif response.status_code == 401:
                     return ProviderHealth(
@@ -229,7 +249,7 @@ class ProviderMonitor:
                         error_message="Invalid API key",
                         rate_limit_remaining=None,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
                 elif response.status_code == 429:
                     return ProviderHealth(
@@ -239,7 +259,7 @@ class ProviderMonitor:
                         error_message="Rate limit exceeded",
                         rate_limit_remaining=0,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
                 else:
                     return ProviderHealth(
@@ -249,7 +269,7 @@ class ProviderMonitor:
                         error_message=f"HTTP {response.status_code}: {response.text}",
                         rate_limit_remaining=None,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
 
         except Exception as e:
@@ -260,33 +280,35 @@ class ProviderMonitor:
                 error_message=str(e),
                 rate_limit_remaining=None,
                 rate_limit_reset=None,
-                usage_stats={}
+                usage_stats={},
             )
 
-    async def _test_anthropic_connection(self, api_key: str, start_time: float) -> ProviderHealth:
+    async def _test_anthropic_connection(
+        self, api_key: str, start_time: float
+    ) -> ProviderHealth:
         """Test Anthropic connection"""
         try:
             import httpx
 
             headers = {
-                'x-api-key': api_key,
-                'Content-Type': 'application/json',
-                'anthropic-version': '2023-06-01'
+                "x-api-key": api_key,
+                "Content-Type": "application/json",
+                "anthropic-version": "2023-06-01",
             }
 
             # Test with a simple message to validate the key
             data = {
-                'model': 'claude-3-haiku-20240307',
-                'max_tokens': 1,
-                'messages': [{'role': 'user', 'content': 'test'}]
+                "model": "claude-3-haiku-20240307",
+                "max_tokens": 1,
+                "messages": [{"role": "user", "content": "test"}],
             }
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    'https://api.anthropic.com/v1/messages',
+                    "https://api.anthropic.com/v1/messages",
                     headers=headers,
                     json=data,
-                    timeout=10.0
+                    timeout=10.0,
                 )
 
                 response_time = time.time() - start_time
@@ -299,7 +321,7 @@ class ProviderMonitor:
                         error_message=None,
                         rate_limit_remaining=None,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
                 elif response.status_code == 401:
                     return ProviderHealth(
@@ -309,7 +331,7 @@ class ProviderMonitor:
                         error_message="Invalid API key",
                         rate_limit_remaining=None,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
                 elif response.status_code == 429:
                     return ProviderHealth(
@@ -319,7 +341,7 @@ class ProviderMonitor:
                         error_message="Rate limit exceeded",
                         rate_limit_remaining=0,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
                 else:
                     return ProviderHealth(
@@ -329,7 +351,7 @@ class ProviderMonitor:
                         error_message=f"HTTP {response.status_code}: {response.text}",
                         rate_limit_remaining=None,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
 
         except Exception as e:
@@ -340,7 +362,7 @@ class ProviderMonitor:
                 error_message=str(e),
                 rate_limit_remaining=None,
                 rate_limit_reset=None,
-                usage_stats={}
+                usage_stats={},
             )
 
     async def _test_ollama_connection(self, start_time: float) -> ProviderHealth:
@@ -349,20 +371,17 @@ class ProviderMonitor:
             import httpx
 
             # Get base URL from credentials or use default
-            base_url = self.credential_manager.get_credential('ollama', 'base_url')
+            base_url = self.credential_manager.get_credential("ollama", "base_url")
             if not base_url:
-                base_url = 'http://localhost:11434'
+                base_url = "http://localhost:11434"
 
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f'{base_url}/api/tags',
-                    timeout=5.0
-                )
+                response = await client.get(f"{base_url}/api/tags", timeout=5.0)
 
                 response_time = time.time() - start_time
 
                 if response.status_code == 200:
-                    models = response.json().get('models', [])
+                    models = response.json().get("models", [])
                     return ProviderHealth(
                         status=ProviderStatus.CONNECTED,
                         last_check=start_time,
@@ -370,7 +389,7 @@ class ProviderMonitor:
                         error_message=None,
                         rate_limit_remaining=None,
                         rate_limit_reset=None,
-                        usage_stats={'models_available': len(models)}
+                        usage_stats={"models_available": len(models)},
                     )
                 else:
                     return ProviderHealth(
@@ -380,7 +399,7 @@ class ProviderMonitor:
                         error_message=f"HTTP {response.status_code}",
                         rate_limit_remaining=None,
                         rate_limit_reset=None,
-                        usage_stats={}
+                        usage_stats={},
                     )
 
         except Exception as e:
@@ -391,7 +410,7 @@ class ProviderMonitor:
                 error_message=f"Connection failed: {str(e)}",
                 rate_limit_remaining=None,
                 rate_limit_reset=None,
-                usage_stats={}
+                usage_stats={},
             )
 
     async def _notify_status_callbacks(self, provider: str, health: ProviderHealth):
@@ -424,7 +443,10 @@ class ProviderMonitor:
             while self._monitoring_active:
                 try:
                     providers = self.credential_manager.list_providers()
-                    tasks = [self.check_provider_connection(provider) for provider in providers]
+                    tasks = [
+                        self.check_provider_connection(provider)
+                        for provider in providers
+                    ]
                     if tasks:
                         await asyncio.gather(*tasks, return_exceptions=True)
 

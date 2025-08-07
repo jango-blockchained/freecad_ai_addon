@@ -17,7 +17,7 @@ import base64
 
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('security')
+logger = get_logger("security")
 
 
 class CredentialManager:
@@ -50,14 +50,14 @@ class CredentialManager:
         """Get existing salt or create a new one"""
         try:
             if self.salt_file.exists():
-                with open(self.salt_file, 'rb') as f:
+                with open(self.salt_file, "rb") as f:
                     salt = f.read()
                 logger.debug("Loaded existing encryption salt")
                 return salt
             else:
                 # Generate new salt
                 salt = os.urandom(16)
-                with open(self.salt_file, 'wb') as f:
+                with open(self.salt_file, "wb") as f:
                     f.write(salt)
                 # Set restrictive permissions on salt file
                 os.chmod(self.salt_file, 0o600)
@@ -80,10 +80,12 @@ class CredentialManager:
             system_info = f"{platform.node()}{platform.system()}{platform.release()}"
 
             # Add user-specific info
-            user_info = f"{os.environ.get('USER', os.environ.get('USERNAME', 'default'))}"
+            user_info = (
+                f"{os.environ.get('USER', os.environ.get('USERNAME', 'default'))}"
+            )
 
             # Combine system and user info
-            key_material = f"{system_info}:{user_info}".encode('utf-8')
+            key_material = f"{system_info}:{user_info}".encode("utf-8")
 
             # Derive key using PBKDF2
             kdf = PBKDF2HMAC(
@@ -108,7 +110,7 @@ class CredentialManager:
                 logger.debug("No existing credentials file found")
                 return {}
 
-            with open(self.credentials_file, 'rb') as f:
+            with open(self.credentials_file, "rb") as f:
                 encrypted_data = f.read()
 
             if not encrypted_data:
@@ -117,7 +119,7 @@ class CredentialManager:
 
             # Decrypt the data
             decrypted_data = self._cipher.decrypt(encrypted_data)
-            credentials = json.loads(decrypted_data.decode('utf-8'))
+            credentials = json.loads(decrypted_data.decode("utf-8"))
 
             logger.debug("Successfully loaded %d credential entries", len(credentials))
             return credentials
@@ -131,11 +133,11 @@ class CredentialManager:
         """Encrypt and save credential data"""
         try:
             # Convert to JSON and encrypt
-            json_data = json.dumps(data, indent=2).encode('utf-8')
+            json_data = json.dumps(data, indent=2).encode("utf-8")
             encrypted_data = self._cipher.encrypt(json_data)
 
             # Write to file with restrictive permissions
-            with open(self.credentials_file, 'wb') as f:
+            with open(self.credentials_file, "wb") as f:
                 f.write(encrypted_data)
 
             # Set restrictive permissions
@@ -168,7 +170,9 @@ class CredentialManager:
             credentials[provider][credential_type] = value
             self._save_encrypted_data(credentials)
 
-            logger.info("Stored credential for provider %s (%s)", provider, credential_type)
+            logger.info(
+                "Stored credential for provider %s (%s)", provider, credential_type
+            )
             return True
 
         except Exception as e:
@@ -191,10 +195,18 @@ class CredentialManager:
 
             if provider in credentials and credential_type in credentials[provider]:
                 value = credentials[provider][credential_type]
-                logger.debug("Retrieved credential for provider %s (%s)", provider, credential_type)
+                logger.debug(
+                    "Retrieved credential for provider %s (%s)",
+                    provider,
+                    credential_type,
+                )
                 return value
             else:
-                logger.debug("Credential not found for provider %s (%s)", provider, credential_type)
+                logger.debug(
+                    "Credential not found for provider %s (%s)",
+                    provider,
+                    credential_type,
+                )
                 return None
 
         except Exception as e:
@@ -227,7 +239,11 @@ class CredentialManager:
                 # Remove specific credential type
                 if credential_type in credentials[provider]:
                     del credentials[provider][credential_type]
-                    logger.info("Removed credential for provider %s (%s)", provider, credential_type)
+                    logger.info(
+                        "Removed credential for provider %s (%s)",
+                        provider,
+                        credential_type,
+                    )
 
                     # If no credentials left for this provider, remove the provider entry
                     if not credentials[provider]:
@@ -291,7 +307,7 @@ class CredentialManager:
                 return False
 
             # Basic validation - check if it's not empty and has reasonable length
-            if credential_type == 'api_key':
+            if credential_type == "api_key":
                 # API keys should be at least 20 characters
                 return len(value.strip()) >= 20
 
@@ -302,7 +318,9 @@ class CredentialManager:
             logger.error("Failed to validate credential: %s", str(e))
             return False
 
-    def export_credentials(self, file_path: str, include_providers: list[str] = None) -> bool:
+    def export_credentials(
+        self, file_path: str, include_providers: list[str] = None
+    ) -> bool:
         """
         Export credentials to an encrypted file for backup
 
@@ -319,7 +337,8 @@ class CredentialManager:
             if include_providers:
                 # Filter to only requested providers
                 filtered_credentials = {
-                    provider: creds for provider, creds in credentials.items()
+                    provider: creds
+                    for provider, creds in credentials.items()
                     if provider in include_providers
                 }
             else:
@@ -327,16 +346,16 @@ class CredentialManager:
 
             # Export with metadata
             export_data = {
-                'version': '1.0',
-                'exported_at': str(Path().cwd()),
-                'credentials': filtered_credentials
+                "version": "1.0",
+                "exported_at": str(Path().cwd()),
+                "credentials": filtered_credentials,
             }
 
             # Encrypt and save
-            json_data = json.dumps(export_data, indent=2).encode('utf-8')
+            json_data = json.dumps(export_data, indent=2).encode("utf-8")
             encrypted_data = self._cipher.encrypt(json_data)
 
-            with open(file_path, 'wb') as f:
+            with open(file_path, "wb") as f:
                 f.write(encrypted_data)
 
             logger.info("Exported credentials to %s", file_path)
@@ -358,19 +377,19 @@ class CredentialManager:
             True if successful, False otherwise
         """
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 encrypted_data = f.read()
 
             # Decrypt the data
             decrypted_data = self._cipher.decrypt(encrypted_data)
-            import_data = json.loads(decrypted_data.decode('utf-8'))
+            import_data = json.loads(decrypted_data.decode("utf-8"))
 
-            if 'credentials' not in import_data:
+            if "credentials" not in import_data:
                 logger.error("Invalid backup file format")
                 return False
 
             current_credentials = self._load_encrypted_data()
-            imported_credentials = import_data['credentials']
+            imported_credentials = import_data["credentials"]
 
             if overwrite:
                 # Replace all credentials
@@ -407,7 +426,7 @@ class CredentialManager:
 
             # Generate new salt and key
             self._salt = os.urandom(16)
-            with open(self.salt_file, 'wb') as f:
+            with open(self.salt_file, "wb") as f:
                 f.write(self._salt)
             os.chmod(self.salt_file, 0o600)
 

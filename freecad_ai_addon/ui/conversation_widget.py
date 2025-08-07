@@ -15,22 +15,31 @@ from enum import Enum
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Signal, QTimer
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTextEdit,
-    QPushButton, QScrollArea, QFrame, QSplitter, QLabel,
-    QFileDialog, QToolButton, QTextBrowser, QMessageBox
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QTextEdit,
+    QPushButton,
+    QScrollArea,
+    QFrame,
+    QSplitter,
+    QLabel,
+    QFileDialog,
+    QToolButton,
+    QTextBrowser,
+    QMessageBox,
 )
-from PySide6.QtGui import (
-    QFont, QColor, QSyntaxHighlighter, QTextCharFormat
-)
+from PySide6.QtGui import QFont, QColor, QSyntaxHighlighter, QTextCharFormat
 
 from freecad_ai_addon.utils.logging import get_logger
 from freecad_ai_addon.utils.config import get_config_manager
 
-logger = get_logger('conversation_widget')
+logger = get_logger("conversation_widget")
 
 
 class MessageType(Enum):
     """Message types in conversation"""
+
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
@@ -41,6 +50,7 @@ class MessageType(Enum):
 @dataclass
 class ChatMessage:
     """Chat message data structure"""
+
     id: str
     type: MessageType
     content: str
@@ -67,43 +77,43 @@ class MarkdownHighlighter(QSyntaxHighlighter):
         header_format = QTextCharFormat()
         header_format.setForeground(QColor("#2196F3"))
         header_format.setFontWeight(QFont.Bold)
-        self.highlighting_rules.append((r'^#{1,6} .*', header_format))
+        self.highlighting_rules.append((r"^#{1,6} .*", header_format))
 
         # Bold text
         bold_format = QTextCharFormat()
         bold_format.setFontWeight(QFont.Bold)
-        self.highlighting_rules.append((r'\*\*([^*]+)\*\*', bold_format))
+        self.highlighting_rules.append((r"\*\*([^*]+)\*\*", bold_format))
 
         # Italic text
         italic_format = QTextCharFormat()
         italic_format.setFontItalic(True)
-        self.highlighting_rules.append((r'\*([^*]+)\*', italic_format))
+        self.highlighting_rules.append((r"\*([^*]+)\*", italic_format))
 
         # Inline code
         code_format = QTextCharFormat()
         code_format.setForeground(QColor("#E91E63"))
         code_format.setBackground(QColor("#F5F5F5"))
         code_format.setFontFamily("Consolas, Monaco, monospace")
-        self.highlighting_rules.append((r'`([^`]+)`', code_format))
+        self.highlighting_rules.append((r"`([^`]+)`", code_format))
 
         # Code blocks
         code_block_format = QTextCharFormat()
         code_block_format.setForeground(QColor("#333333"))
         code_block_format.setBackground(QColor("#F8F8F8"))
         code_block_format.setFontFamily("Consolas, Monaco, monospace")
-        self.highlighting_rules.append((r'```[\s\S]*?```', code_block_format))
+        self.highlighting_rules.append((r"```[\s\S]*?```", code_block_format))
 
         # Links
         link_format = QTextCharFormat()
         link_format.setForeground(QColor("#1976D2"))
         link_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
-        self.highlighting_rules.append((r'\[([^\]]+)\]\([^)]+\)', link_format))
+        self.highlighting_rules.append((r"\[([^\]]+)\]\([^)]+\)", link_format))
 
         # Lists
         list_format = QTextCharFormat()
         list_format.setForeground(QColor("#4CAF50"))
-        self.highlighting_rules.append((r'^[\s]*[-*+] .*', list_format))
-        self.highlighting_rules.append((r'^[\s]*\d+\. .*', list_format))
+        self.highlighting_rules.append((r"^[\s]*[-*+] .*", list_format))
+        self.highlighting_rules.append((r"^[\s]*\d+\. .*", list_format))
 
     def highlightBlock(self, text):
         """Apply highlighting to a text block"""
@@ -173,8 +183,10 @@ class MessageWidget(QFrame):
         layout.addWidget(content_widget)
 
         # Add interactive elements for assistant messages with code
-        if (self.message.type == MessageType.ASSISTANT and
-                self._contains_executable_code(self.message.content)):
+        if (
+            self.message.type == MessageType.ASSISTANT
+            and self._contains_executable_code(self.message.content)
+        ):
             self._add_interactive_elements(layout)
 
         # Attachments
@@ -188,7 +200,7 @@ class MessageWidget(QFrame):
             MessageType.ASSISTANT: "AI Assistant",
             MessageType.SYSTEM: "System",
             MessageType.ERROR: "Error",
-            MessageType.INFO: "Info"
+            MessageType.INFO: "Info",
         }
         return type_map.get(self.message.type, "Unknown")
 
@@ -204,26 +216,35 @@ class MessageWidget(QFrame):
         """
 
         if self.message.type == MessageType.USER:
-            self.setStyleSheet(base_style + """
+            self.setStyleSheet(
+                base_style
+                + """
                 QFrame {
                     background-color: #E3F2FD;
                     border-color: #2196F3;
                 }
-            """)
+            """
+            )
         elif self.message.type == MessageType.ASSISTANT:
-            self.setStyleSheet(base_style + """
+            self.setStyleSheet(
+                base_style
+                + """
                 QFrame {
                     background-color: #F1F8E9;
                     border-color: #4CAF50;
                 }
-            """)
+            """
+            )
         elif self.message.type == MessageType.ERROR:
-            self.setStyleSheet(base_style + """
+            self.setStyleSheet(
+                base_style
+                + """
                 QFrame {
                     background-color: #FFEBEE;
                     border-color: #F44336;
                 }
-            """)
+            """
+            )
         else:
             self.setStyleSheet(base_style)
 
@@ -242,12 +263,13 @@ class MessageWidget(QFrame):
     def _contains_executable_code(self, content: str) -> bool:
         """Check if message content contains executable Python/FreeCAD code"""
         import re
+
         # Look for code blocks with FreeCAD-specific content
-        code_pattern = r'```(?:python|py)?\n(.*?)\n```'
+        code_pattern = r"```(?:python|py)?\n(.*?)\n```"
         matches = re.findall(code_pattern, content, re.DOTALL)
 
         for code in matches:
-            if 'App.' in code or 'Gui.' in code or 'FreeCAD' in code:
+            if "App." in code or "Gui." in code or "FreeCAD" in code:
                 return True
         return False
 
@@ -255,12 +277,10 @@ class MessageWidget(QFrame):
         """Add interactive elements for code execution"""
         try:
             from freecad_ai_addon.ui.interactive_elements import (
-                create_interactive_message_widget
+                create_interactive_message_widget,
             )
 
-            interactive_widget = create_interactive_message_widget(
-                self.message.content
-            )
+            interactive_widget = create_interactive_message_widget(self.message.content)
             layout.addWidget(interactive_widget)
 
         except ImportError as e:
@@ -272,16 +292,18 @@ class MessageWidget(QFrame):
         """Add basic code execution buttons as fallback"""
         # Extract code blocks
         import re
-        code_pattern = r'```(?:python|py)?\n(.*?)\n```'
+
+        code_pattern = r"```(?:python|py)?\n(.*?)\n```"
         matches = re.findall(code_pattern, self.message.content, re.DOTALL)
 
         for i, code in enumerate(matches):
-            if 'App.' in code or 'Gui.' in code:
+            if "App." in code or "Gui." in code:
                 button_frame = QFrame()
                 button_layout = QHBoxLayout(button_frame)
 
                 execute_btn = QPushButton(f"Execute Code Block {i+1}")
-                execute_btn.setStyleSheet("""
+                execute_btn.setStyleSheet(
+                    """
                     QPushButton {
                         background-color: #4CAF50;
                         color: white;
@@ -293,10 +315,12 @@ class MessageWidget(QFrame):
                     QPushButton:hover {
                         background-color: #45a049;
                     }
-                """)
+                """
+                )
 
                 copy_btn = QPushButton("Copy")
-                copy_btn.setStyleSheet("""
+                copy_btn.setStyleSheet(
+                    """
                     QPushButton {
                         background-color: #2196F3;
                         color: white;
@@ -304,15 +328,14 @@ class MessageWidget(QFrame):
                         border-radius: 4px;
                         padding: 6px 12px;
                     }
-                """)
+                """
+                )
 
                 # Connect signals with lambda to capture code
                 execute_btn.clicked.connect(
                     lambda checked, c=code: self._execute_code(c)
                 )
-                copy_btn.clicked.connect(
-                    lambda checked, c=code: self._copy_code(c)
-                )
+                copy_btn.clicked.connect(lambda checked, c=code: self._copy_code(c))
 
                 button_layout.addWidget(execute_btn)
                 button_layout.addWidget(copy_btn)
@@ -330,26 +353,24 @@ class MessageWidget(QFrame):
                 App.newDocument("AI_Generated")
 
             # Execute the code
-            exec(code, {'App': App, 'Gui': Gui})
+            exec(code, {"App": App, "Gui": Gui})
 
             # Show success message briefly
             self.sender().setText("✓ Executed")
-            self.sender().setStyleSheet(self.sender().styleSheet().replace(
-                "#4CAF50", "#2196F3"
-            ))
+            self.sender().setStyleSheet(
+                self.sender().styleSheet().replace("#4CAF50", "#2196F3")
+            )
 
             # Reset after 3 seconds
             QTimer.singleShot(3000, lambda: self._reset_execute_button())
 
         except ImportError:
             QMessageBox.warning(
-                self, "FreeCAD Required",
-                "FreeCAD is required for code execution"
+                self, "FreeCAD Required", "FreeCAD is required for code execution"
             )
         except Exception as e:
             QMessageBox.critical(
-                self, "Execution Error",
-                f"Error executing code: {str(e)}"
+                self, "Execution Error", f"Error executing code: {str(e)}"
             )
 
     def _copy_code(self, code: str):
@@ -369,9 +390,7 @@ class MessageWidget(QFrame):
             if "Execute Code Block" in text or text == "✓ Executed":
                 new_text = text.replace("✓ Executed", "Execute Code Block")
                 button.setText(new_text)
-                button.setStyleSheet(button.styleSheet().replace(
-                    "#2196F3", "#4CAF50"
-                ))
+                button.setStyleSheet(button.styleSheet().replace("#2196F3", "#4CAF50"))
 
 
 class ConversationArea(QScrollArea):
@@ -479,8 +498,10 @@ class MessageInputArea(QWidget):
     def eventFilter(self, obj, event):
         """Handle keyboard events for text input"""
         if obj == self.text_input and event.type() == QtCore.QEvent.KeyPress:
-            if (event.key() == QtCore.Qt.Key_Return or
-                    event.key() == QtCore.Qt.Key_Enter):
+            if (
+                event.key() == QtCore.Qt.Key_Return
+                or event.key() == QtCore.Qt.Key_Enter
+            ):
                 if event.modifiers() == QtCore.Qt.ShiftModifier:
                     # Shift+Enter: insert new line
                     return False
@@ -493,10 +514,7 @@ class MessageInputArea(QWidget):
     def _attach_files(self):
         """Open file dialog to attach files"""
         files, _ = QFileDialog.getOpenFileNames(
-            self,
-            "Attach Files",
-            "",
-            "All Files (*)"
+            self, "Attach Files", "", "All Files (*)"
         )
 
         for file_path in files:
@@ -515,7 +533,7 @@ class MessageInputArea(QWidget):
 
         # Add attachment labels
         for attachment in self.attachments:
-            filename = attachment.split('/')[-1]
+            filename = attachment.split("/")[-1]
             label = QLabel(f"📎 {filename}")
             label.setStyleSheet("color: #1976D2; padding: 2px;")
 
@@ -655,7 +673,7 @@ class ConversationWidget(QWidget):
             type=MessageType.USER,
             content=text,
             timestamp=datetime.now(),
-            attachments=attachments
+            attachments=attachments,
         )
 
         # Add to conversation
@@ -668,29 +686,30 @@ class ConversationWidget(QWidget):
         """Add a message to the conversation"""
         self.conversation_area.add_message(message)
 
-    def add_user_message(self, text: str,
-                         attachments: Optional[List[str]] = None
-                         ) -> ChatMessage:
+    def add_user_message(
+        self, text: str, attachments: Optional[List[str]] = None
+    ) -> ChatMessage:
         """Add a user message to the conversation"""
         message = ChatMessage(
             id=self._generate_message_id(),
             type=MessageType.USER,
             content=text,
             timestamp=datetime.now(),
-            attachments=attachments or []
+            attachments=attachments or [],
         )
         self.add_message(message)
         return message
 
-    def add_assistant_message(self, text: str,
-                              provider: Optional[str] = None) -> ChatMessage:
+    def add_assistant_message(
+        self, text: str, provider: Optional[str] = None
+    ) -> ChatMessage:
         """Add an assistant message to the conversation"""
         message = ChatMessage(
             id=self._generate_message_id(),
             type=MessageType.ASSISTANT,
             content=text,
             timestamp=datetime.now(),
-            provider=provider
+            provider=provider,
         )
         self.add_message(message)
         return message
@@ -701,7 +720,7 @@ class ConversationWidget(QWidget):
             id=self._generate_message_id(),
             type=MessageType.SYSTEM,
             content=text,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
         self.add_message(message)
         return message
@@ -712,7 +731,7 @@ class ConversationWidget(QWidget):
             id=self._generate_message_id(),
             type=MessageType.ERROR,
             content=text,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
         self.add_message(message)
         return message
@@ -731,7 +750,7 @@ class ConversationWidget(QWidget):
             "Clear Conversation",
             "Are you sure you want to clear the entire conversation?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
 
         if reply == QtWidgets.QMessageBox.Yes:
@@ -741,21 +760,19 @@ class ConversationWidget(QWidget):
     def _export_conversation(self):
         """Export conversation to file"""
         if not self.conversation_area.messages:
-            QtWidgets.QMessageBox.information(
-                self, "Export", "No messages to export."
-            )
+            QtWidgets.QMessageBox.information(self, "Export", "No messages to export.")
             return
 
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Export Conversation",
             f"conversation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            "JSON Files (*.json);;Text Files (*.txt)"
+            "JSON Files (*.json);;Text Files (*.txt)",
         )
 
         if file_path:
             try:
-                if file_path.endswith('.json'):
+                if file_path.endswith(".json"):
                     self._export_as_json(file_path)
                 else:
                     self._export_as_text(file_path)
@@ -772,24 +789,26 @@ class ConversationWidget(QWidget):
         """Export conversation as JSON"""
         data = []
         for message in self.conversation_area.messages:
-            data.append({
-                'id': message.id,
-                'type': message.type.value,
-                'content': message.content,
-                'timestamp': message.timestamp.isoformat(),
-                'provider': message.provider,
-                'metadata': message.metadata,
-                'attachments': message.attachments
-            })
+            data.append(
+                {
+                    "id": message.id,
+                    "type": message.type.value,
+                    "content": message.content,
+                    "timestamp": message.timestamp.isoformat(),
+                    "provider": message.provider,
+                    "metadata": message.metadata,
+                    "attachments": message.attachments,
+                }
+            )
 
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
     def _export_as_text(self, file_path: str):
         """Export conversation as plain text"""
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write("FreeCAD AI Conversation Export\n")
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             f.write(f"Generated: {timestamp}\n")
             f.write("=" * 50 + "\n\n")
 
@@ -815,13 +834,13 @@ class ConversationWidget(QWidget):
         for msg_data in messages:
             try:
                 message = ChatMessage(
-                    id=msg_data['id'],
-                    type=MessageType(msg_data['type']),
-                    content=msg_data['content'],
-                    timestamp=datetime.fromisoformat(msg_data['timestamp']),
-                    provider=msg_data.get('provider'),
-                    metadata=msg_data.get('metadata', {}),
-                    attachments=msg_data.get('attachments', [])
+                    id=msg_data["id"],
+                    type=MessageType(msg_data["type"]),
+                    content=msg_data["content"],
+                    timestamp=datetime.fromisoformat(msg_data["timestamp"]),
+                    provider=msg_data.get("provider"),
+                    metadata=msg_data.get("metadata", {}),
+                    attachments=msg_data.get("attachments", []),
                 )
                 self.add_message(message)
             except Exception as e:

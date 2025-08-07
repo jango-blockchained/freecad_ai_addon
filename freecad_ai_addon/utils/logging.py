@@ -26,20 +26,17 @@ def setup_logging(level=logging.INFO):
 
         logging.basicConfig(
             level=level,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_file),
-                logging.StreamHandler()
-            ]
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
         )
 
-        logger = logging.getLogger('freecad_ai_addon')
+        logger = logging.getLogger("freecad_ai_addon")
         logger.info("Logging system initialized successfully")
 
     except Exception as e:
         # Fallback to basic logging if setup fails
         logging.basicConfig(level=level)
-        logger = logging.getLogger('freecad_ai_addon')
+        logger = logging.getLogger("freecad_ai_addon")
         logger.error(f"Failed to setup advanced logging: {e}")
 
 
@@ -53,4 +50,4 @@ def get_logger(name):
     Returns:
         Logger instance
     """
-    return logging.getLogger(f'freecad_ai_addon.{name}')
+    return logging.getLogger(f"freecad_ai_addon.{name}")

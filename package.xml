@@ -20,7 +20,7 @@
     <content>
         <workbench>
             <classname>AIWorkbench</classname>
-            <subdirectory>./</subdirectory>
+            <module>InitGui</module>
         </workbench>
     </content>
     <depend>

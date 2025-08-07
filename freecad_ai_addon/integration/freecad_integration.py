@@ -10,7 +10,7 @@ from typing import Callable, Optional
 
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('freecad_integration')
+logger = get_logger("freecad_integration")
 
 
 class SelectionObserver:
@@ -53,7 +53,7 @@ class SelectionObserver:
     def clearSelection(self, doc):
         """Called when selection is cleared"""
         try:
-            selection_info = {'objects': [], 'count': 0}
+            selection_info = {"objects": [], "count": 0}
             self.callback(selection_info)
         except Exception as e:
             logger.error("Error in clearSelection: %s", str(e))
@@ -63,41 +63,43 @@ class SelectionObserver:
         try:
             selection = Gui.Selection.getSelection()
             selection_info = {
-                'objects': [obj.Name for obj in selection],
-                'count': len(selection),
-                'types': [obj.TypeId for obj in selection],
+                "objects": [obj.Name for obj in selection],
+                "count": len(selection),
+                "types": [obj.TypeId for obj in selection],
             }
 
             # Add detailed info for each selected object
             details = []
             for obj in selection:
                 obj_info = {
-                    'name': obj.Name,
-                    'label': getattr(obj, 'Label', ''),
-                    'type': obj.TypeId,
-                    'document': obj.Document.Name if obj.Document else '',
+                    "name": obj.Name,
+                    "label": getattr(obj, "Label", ""),
+                    "type": obj.TypeId,
+                    "document": obj.Document.Name if obj.Document else "",
                 }
 
                 # Add geometry info if available
-                if hasattr(obj, 'Shape'):
+                if hasattr(obj, "Shape"):
                     try:
                         shape = obj.Shape
-                        obj_info.update({
-                            'volume': getattr(shape, 'Volume', 0),
-                            'area': getattr(shape, 'Area', 0),
-                            'length': getattr(shape, 'Length', 0),
-                        })
+                        obj_info.update(
+                            {
+                                "volume": getattr(shape, "Volume", 0),
+                                "area": getattr(shape, "Area", 0),
+                                "length": getattr(shape, "Length", 0),
+                            }
+                        )
                     except Exception:
                         pass
 
                 details.append(obj_info)
 
-            selection_info['details'] = details
+            selection_info["details"] = details
             return selection_info
 
         except Exception as e:
             logger.error("Error getting selection info: %s", str(e))
-            return {'objects': [], 'count': 0, 'details': []}
+            return {"objects": [], "count": 0, "details": []}
 
     def start(self):
         """Start observing selection changes"""
@@ -153,13 +155,13 @@ def get_current_selection() -> dict:
     try:
         selection = Gui.Selection.getSelection()
         return {
-            'objects': [obj.Name for obj in selection],
-            'count': len(selection),
-            'types': [obj.TypeId for obj in selection],
+            "objects": [obj.Name for obj in selection],
+            "count": len(selection),
+            "types": [obj.TypeId for obj in selection],
         }
     except Exception as e:
         logger.error("Error getting current selection: %s", str(e))
-        return {'objects': [], 'count': 0, 'types': []}
+        return {"objects": [], "count": 0, "types": []}
 
 
 def get_active_document_info() -> dict:
@@ -167,21 +169,21 @@ def get_active_document_info() -> dict:
     try:
         doc = App.ActiveDocument
         if not doc:
-            return {'name': None, 'objects': [], 'count': 0}
+            return {"name": None, "objects": [], "count": 0}
 
         objects = doc.Objects
         return {
-            'name': doc.Name,
-            'label': getattr(doc, 'Label', ''),
-            'path': getattr(doc, 'FileName', ''),
-            'objects': [obj.Name for obj in objects],
-            'count': len(objects),
-            'types': list(set(obj.TypeId for obj in objects)),
+            "name": doc.Name,
+            "label": getattr(doc, "Label", ""),
+            "path": getattr(doc, "FileName", ""),
+            "objects": [obj.Name for obj in objects],
+            "count": len(objects),
+            "types": list(set(obj.TypeId for obj in objects)),
         }
 
     except Exception as e:
         logger.error("Error getting document info: %s", str(e))
-        return {'name': None, 'objects': [], 'count': 0}
+        return {"name": None, "objects": [], "count": 0}
 
 
 def get_active_workbench() -> str:
@@ -196,8 +198,8 @@ def get_active_workbench() -> str:
 def get_freecad_context() -> dict:
     """Get comprehensive FreeCAD context information"""
     return {
-        'document': get_active_document_info(),
-        'selection': get_current_selection(),
-        'workbench': get_active_workbench(),
-        'version': App.Version(),
+        "document": get_active_document_info(),
+        "selection": get_current_selection(),
+        "workbench": get_active_workbench(),
+        "version": App.Version(),
     }

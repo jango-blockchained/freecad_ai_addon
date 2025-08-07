@@ -1,0 +1,16 @@
+__pycache__/*
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.pyd
+*.pyo
+*.pdb
+*.so
+*.egg-info
+*.eggs
+*.dist-info
+*.DS_Store
+*.vscode
+*.vscode-test
+*.vscode-test-*

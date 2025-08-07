@@ -5,9 +5,4 @@ Contains security & encryption, logging & analytics, and configuration
 management utilities.
 """
 
-__all__ = [
-    "logging",
-    "config",
-    "security",
-    "analytics"
-]
+__all__ = ["logging", "config", "security", "analytics"]

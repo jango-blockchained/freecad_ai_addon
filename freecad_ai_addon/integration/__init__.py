@@ -10,5 +10,5 @@ __all__ = [
     "commands",
     "context_providers",
     "freecad_conversation_dock",
-    "agent_conversation_integration"
+    "agent_conversation_integration",
 ]

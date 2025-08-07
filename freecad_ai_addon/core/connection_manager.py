@@ -11,17 +11,16 @@ from typing import Dict, Optional, List, Callable, Any
 from dataclasses import dataclass, field
 from enum import Enum
 
-from freecad_ai_addon.core.provider_status import (
-    get_provider_monitor, ProviderStatus
-)
+from freecad_ai_addon.core.provider_status import get_provider_monitor, ProviderStatus
 from freecad_ai_addon.core.provider_manager import get_provider_manager
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('connection_manager')
+logger = get_logger("connection_manager")
 
 
 class ConnectionEvent(Enum):
     """Connection event types"""
+
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     RECONNECTING = "reconnecting"
@@ -32,6 +31,7 @@ class ConnectionEvent(Enum):
 @dataclass
 class ConnectionConfig:
     """Configuration for connection management"""
+
     retry_attempts: int = 3
     retry_delay: float = 5.0
     retry_backoff: float = 2.0
@@ -47,6 +47,7 @@ class ConnectionConfig:
 @dataclass
 class ConnectionStats:
     """Connection statistics"""
+
     total_connections: int = 0
     successful_connections: int = 0
     failed_connections: int = 0
@@ -80,7 +81,9 @@ class ConnectionManager:
 
         logger.info("Connection manager initialized")
 
-    def register_event_callback(self, callback: Callable[[str, ConnectionEvent, Any], None]):
+    def register_event_callback(
+        self, callback: Callable[[str, ConnectionEvent, Any], None]
+    ):
         """
         Register callback for connection events
 
@@ -96,7 +99,9 @@ class ConnectionManager:
             self._event_callbacks.remove(callback)
             logger.debug("Unregistered connection event callback")
 
-    async def _emit_event(self, provider: str, event: ConnectionEvent, data: Any = None):
+    async def _emit_event(
+        self, provider: str, event: ConnectionEvent, data: Any = None
+    ):
         """Emit connection event to registered callbacks"""
         for callback in self._event_callbacks:
             try:
@@ -117,7 +122,9 @@ class ConnectionManager:
         """Get connection statistics for all providers"""
         return self._connection_stats.copy()
 
-    async def connect_provider(self, provider: str, force_reconnect: bool = False) -> bool:
+    async def connect_provider(
+        self, provider: str, force_reconnect: bool = False
+    ) -> bool:
         """
         Connect to a specific provider with retry logic
 
@@ -128,7 +135,11 @@ class ConnectionManager:
         Returns:
             True if connection successful
         """
-        if provider in self._active_connections and self._active_connections[provider] and not force_reconnect:
+        if (
+            provider in self._active_connections
+            and self._active_connections[provider]
+            and not force_reconnect
+        ):
             logger.debug("Provider %s already connected", provider)
             return True
 
@@ -157,7 +168,9 @@ class ConnectionManager:
             else:
                 stats.failed_connections += 1
                 self._active_connections[provider] = False
-                await self._emit_event(provider, ConnectionEvent.ERROR, "Connection failed")
+                await self._emit_event(
+                    provider, ConnectionEvent.ERROR, "Connection failed"
+                )
 
             return result
 
@@ -179,7 +192,12 @@ class ConnectionManager:
 
         for attempt in range(self.config.retry_attempts):
             try:
-                logger.info("Connecting to %s (attempt %d/%d)", provider, attempt + 1, self.config.retry_attempts)
+                logger.info(
+                    "Connecting to %s (attempt %d/%d)",
+                    provider,
+                    attempt + 1,
+                    self.config.retry_attempts,
+                )
 
                 # Perform actual connection test
                 health = await self.provider_monitor.check_provider_connection(provider)
@@ -194,26 +212,43 @@ class ConnectionManager:
                         else:
                             # Simple moving average
                             stats.average_response_time = (
-                                stats.average_response_time * 0.8 + health.response_time * 0.2
+                                stats.average_response_time * 0.8
+                                + health.response_time * 0.2
                             )
 
                     return True
                 else:
-                    raise Exception(f"Connection failed: {health.error_message or health.status.value}")
+                    raise Exception(
+                        f"Connection failed: {health.error_message or health.status.value}"
+                    )
 
             except asyncio.CancelledError:
                 raise
             except Exception as e:
-                logger.warning("Connection attempt %d failed for %s: %s", attempt + 1, provider, str(e))
+                logger.warning(
+                    "Connection attempt %d failed for %s: %s",
+                    attempt + 1,
+                    provider,
+                    str(e),
+                )
                 stats.last_error = str(e)
 
                 if attempt < self.config.retry_attempts - 1:
                     stats.reconnection_attempts += 1
-                    await self._emit_event(provider, ConnectionEvent.RECONNECTING, f"Retry {attempt + 1}")
+                    await self._emit_event(
+                        provider, ConnectionEvent.RECONNECTING, f"Retry {attempt + 1}"
+                    )
                     await asyncio.sleep(retry_delay)
-                    retry_delay = min(retry_delay * self.config.retry_backoff, self.config.max_retry_delay)
+                    retry_delay = min(
+                        retry_delay * self.config.retry_backoff,
+                        self.config.max_retry_delay,
+                    )
 
-        logger.error("Failed to connect to %s after %d attempts", provider, self.config.retry_attempts)
+        logger.error(
+            "Failed to connect to %s after %d attempts",
+            provider,
+            self.config.retry_attempts,
+        )
         return False
 
     async def disconnect_provider(self, provider: str):
@@ -248,10 +283,16 @@ class ConnectionManager:
                     if not self._active_connections.get(provider, False):
                         break
 
-                    health = await self.provider_monitor.check_provider_connection(provider)
+                    health = await self.provider_monitor.check_provider_connection(
+                        provider
+                    )
 
                     if health.status != ProviderStatus.CONNECTED:
-                        logger.warning("Health check failed for %s: %s", provider, health.error_message)
+                        logger.warning(
+                            "Health check failed for %s: %s",
+                            provider,
+                            health.error_message,
+                        )
                         await self._handle_connection_failure(provider)
                         break
                     else:
@@ -302,15 +343,15 @@ class ConnectionManager:
             if fallback_provider == failed_provider:
                 continue
 
-            logger.info("Trying fallback provider %s for %s", fallback_provider, failed_provider)
+            logger.info(
+                "Trying fallback provider %s for %s", fallback_provider, failed_provider
+            )
 
             success = await self.connect_provider(fallback_provider)
             if success:
                 stats.fallback_activations += 1
                 await self._emit_event(
-                    failed_provider,
-                    ConnectionEvent.FALLBACK,
-                    fallback_provider
+                    failed_provider, ConnectionEvent.FALLBACK, fallback_provider
                 )
                 logger.info("Fallback to %s successful", fallback_provider)
                 return
@@ -369,7 +410,8 @@ class ConnectionManager:
     def get_connected_providers(self) -> List[str]:
         """Get list of connected providers"""
         return [
-            provider for provider, connected in self._active_connections.items()
+            provider
+            for provider, connected in self._active_connections.items()
             if connected
         ]
 
@@ -427,7 +469,9 @@ class ConnectionManager:
 _connection_manager = None
 
 
-def get_connection_manager(config: Optional[ConnectionConfig] = None) -> ConnectionManager:
+def get_connection_manager(
+    config: Optional[ConnectionConfig] = None,
+) -> ConnectionManager:
     """
     Get the global connection manager instance
 

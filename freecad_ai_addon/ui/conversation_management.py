@@ -11,18 +11,28 @@ from datetime import datetime
 from PySide6 import QtCore
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QListWidget, QListWidgetItem, QTextEdit, QComboBox,
-    QDialog, QDialogButtonBox, QLineEdit, QGroupBox,
-    QSplitter, QMessageBox, QFileDialog
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QTextEdit,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QLineEdit,
+    QGroupBox,
+    QSplitter,
+    QMessageBox,
+    QFileDialog,
 )
 
-from freecad_ai_addon.ui.conversation_persistence import (
-    get_conversation_persistence
-)
+from freecad_ai_addon.ui.conversation_persistence import get_conversation_persistence
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('conversation_management')
+logger = get_logger("conversation_management")
 
 
 class ConversationHistoryDialog(QDialog):
@@ -56,9 +66,7 @@ class ConversationHistoryDialog(QDialog):
         search_layout.addWidget(self.search_edit)
 
         self.date_filter = QComboBox()
-        self.date_filter.addItems([
-            "All Time", "Today", "This Week", "This Month"
-        ])
+        self.date_filter.addItems(["All Time", "Today", "This Week", "This Month"])
         self.date_filter.currentTextChanged.connect(self._filter_conversations)
         search_layout.addWidget(QLabel("Date:"))
         search_layout.addWidget(self.date_filter)
@@ -127,10 +135,7 @@ class ConversationHistoryDialog(QDialog):
         layout.addWidget(splitter)
 
         # Dialog buttons
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Close,
-            QtCore.Qt.Horizontal
-        )
+        buttons = QDialogButtonBox(QDialogButtonBox.Close, QtCore.Qt.Horizontal)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
@@ -142,9 +147,7 @@ class ConversationHistoryDialog(QDialog):
             logger.info(f"Loaded {len(self.conversations)} conversations")
         except Exception as e:
             logger.error(f"Failed to load conversations: {e}")
-            QMessageBox.critical(
-                self, "Error", f"Failed to load conversations: {e}"
-            )
+            QMessageBox.critical(self, "Error", f"Failed to load conversations: {e}")
 
     def _update_conversation_list(self):
         """Update the conversation list display"""
@@ -157,13 +160,12 @@ class ConversationHistoryDialog(QDialog):
             created_at = conv.get("created_at", "Unknown")
             if created_at != "Unknown":
                 try:
-                    dt = datetime.fromisoformat(
-                        created_at.replace('Z', '+00:00'))
+                    dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
                     created_str = dt.strftime("%Y-%m-%d %H:%M")
                 except (ValueError, AttributeError):
-                    created_str = (created_at[:16]
-                                   if len(created_at) > 16
-                                   else created_at)
+                    created_str = (
+                        created_at[:16] if len(created_at) > 16 else created_at
+                    )
             else:
                 created_str = "Unknown"
 
@@ -197,7 +199,8 @@ class ConversationHistoryDialog(QDialog):
             if date_filter != "All Time":
                 created_at = conv.get("created_at")
                 if created_at and not self._matches_date_filter(
-                        created_at, date_filter):
+                    created_at, date_filter
+                ):
                     continue
 
             filtered_conversations.append(conv)
@@ -209,7 +212,7 @@ class ConversationHistoryDialog(QDialog):
     def _matches_date_filter(self, created_at: str, filter_type: str) -> bool:
         """Check if conversation matches date filter"""
         try:
-            dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
             now = datetime.now()
 
             if filter_type == "Today":
@@ -217,7 +220,7 @@ class ConversationHistoryDialog(QDialog):
             elif filter_type == "This Week":
                 return (now - dt).days <= 7
             elif filter_type == "This Month":
-                return (now.year == dt.year and now.month == dt.month)
+                return now.year == dt.year and now.month == dt.month
 
         except Exception:
             pass
@@ -283,9 +286,10 @@ class ConversationHistoryDialog(QDialog):
 
         # Confirm deletion
         reply = QMessageBox.question(
-            self, "Confirm Deletion",
+            self,
+            "Confirm Deletion",
             f"Are you sure you want to delete conversation {conversation_id}?",
-            QMessageBox.Yes | QMessageBox.No
+            QMessageBox.Yes | QMessageBox.No,
         )
 
         if reply == QMessageBox.Yes:
@@ -295,9 +299,7 @@ class ConversationHistoryDialog(QDialog):
                     self, "Deleted", "Conversation deleted successfully."
                 )
             else:
-                QMessageBox.critical(
-                    self, "Error", "Failed to delete conversation."
-                )
+                QMessageBox.critical(self, "Error", "Failed to delete conversation.")
 
     def _export_conversation(self):
         """Export selected conversation"""
@@ -318,9 +320,7 @@ class ConversationHistoryDialog(QDialog):
         format_combo.addItems(["Markdown", "JSON", "Plain Text"])
         layout.addWidget(format_combo)
 
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(format_dialog.accept)
         buttons.rejected.connect(format_dialog.reject)
         layout.addWidget(buttons)
@@ -338,27 +338,25 @@ class ConversationHistoryDialog(QDialog):
                 file_extension = {
                     "markdown": "md",
                     "json": "json",
-                    "plain_text": "txt"
+                    "plain_text": "txt",
                 }[export_format]
 
                 filename, _ = QFileDialog.getSaveFileName(
                     self,
                     "Export Conversation",
                     f"conversation_{conversation_id}.{file_extension}",
-                    f"{export_format.title()} files (*.{file_extension})"
+                    f"{export_format.title()} files (*.{file_extension})",
                 )
 
                 if filename:
                     try:
-                        with open(filename, 'w', encoding='utf-8') as f:
+                        with open(filename, "w", encoding="utf-8") as f:
                             f.write(content)
                         QMessageBox.information(
                             self, "Exported", f"Conversation exported to {filename}"
                         )
                     except Exception as e:
-                        QMessageBox.critical(
-                            self, "Error", f"Failed to export: {e}"
-                        )
+                        QMessageBox.critical(self, "Error", f"Failed to export: {e}")
 
     def _load_selected_conversation(self):
         """Load selected conversation into main interface"""
@@ -390,9 +388,7 @@ class ConversationTemplatesWidget(QWidget):
 
         # Template list
         self.template_combo = QComboBox()
-        self.template_combo.currentTextChanged.connect(
-            self._on_template_selected
-        )
+        self.template_combo.currentTextChanged.connect(self._on_template_selected)
         layout.addWidget(self.template_combo)
 
         # Template preview
@@ -428,7 +424,6 @@ class ConversationTemplatesWidget(QWidget):
 4. Potential improvements
 
 Current design context: {context}""",
-
             "3D Printing Analysis": """Analyze this part for 3D printing:
 1. Check for overhangs requiring supports
 2. Verify wall thickness (minimum 1.2mm)
@@ -437,7 +432,6 @@ Current design context: {context}""",
 5. Recommend infill and layer settings
 
 Part specifications: {context}""",
-
             "Manufacturing Guidance": """Provide manufacturing guidance for this part:
 1. Recommended manufacturing process
 2. Material selection advice
@@ -446,7 +440,6 @@ Part specifications: {context}""",
 5. Quality control checkpoints
 
 Design details: {context}""",
-
             "Assembly Planning": """Help plan the assembly process for:
 1. Component identification and ordering
 2. Assembly sequence optimization
@@ -455,7 +448,6 @@ Design details: {context}""",
 5. Testing and validation steps
 
 Assembly context: {context}""",
-
             "Design Optimization": """Optimize this design for:
 1. Weight reduction while maintaining strength
 2. Material cost minimization
@@ -463,7 +455,7 @@ Assembly context: {context}""",
 4. Performance improvement
 5. Lifecycle considerations
 
-Current design: {context}"""
+Current design: {context}""",
         }
 
     def _load_templates(self):
@@ -491,9 +483,7 @@ Current design: {context}"""
         if template_name in self.templates:
             # Get FreeCAD context
             context = self._get_freecad_context()
-            template_content = self.templates[template_name].format(
-                context=context
-            )
+            template_content = self.templates[template_name].format(context=context)
             self.template_selected.emit(template_content)
 
     def _customize_template(self):
@@ -515,9 +505,7 @@ Current design: {context}"""
         text_edit.setPlainText(self.templates[template_name])
         layout.addWidget(text_edit)
 
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
@@ -538,15 +526,12 @@ Current design: {context}"""
                 return "No active FreeCAD document"
 
             doc = App.ActiveDocument
-            context_parts = [
-                f"Document: {doc.Label}",
-                f"Objects: {len(doc.Objects)}"
-            ]
+            context_parts = [f"Document: {doc.Label}", f"Objects: {len(doc.Objects)}"]
 
             # Add object details
             for obj in doc.Objects[:5]:  # First 5 objects
                 obj_info = f"- {obj.Label} ({obj.TypeId})"
-                if hasattr(obj, 'Shape') and obj.Shape:
+                if hasattr(obj, "Shape") and obj.Shape:
                     obj_info += f" - Volume: {obj.Shape.Volume:.2f}"
                 context_parts.append(obj_info)
 

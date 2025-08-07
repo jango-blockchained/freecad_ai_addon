@@ -11,12 +11,14 @@ from PySide6 import QtWidgets, QtCore
 
 from freecad_ai_addon.ui.security_dialogs import APIKeyInputDialog
 from freecad_ai_addon.core.provider_status import (
-    get_provider_monitor, ProviderStatus, ProviderHealth
+    get_provider_monitor,
+    ProviderStatus,
+    ProviderHealth,
 )
 from freecad_ai_addon.utils.security import get_credential_manager
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('provider_ui')
+logger = get_logger("provider_ui")
 
 
 class ProviderStatusWidget(QtWidgets.QWidget):
@@ -92,20 +94,20 @@ class ProviderStatusWidget(QtWidgets.QWidget):
 
         # Update status indicator color
         status_colors = {
-            ProviderStatus.CONNECTED: "#4CAF50",      # Green
-            ProviderStatus.CONNECTING: "#FF9800",     # Orange
-            ProviderStatus.DISCONNECTED: "#9E9E9E",   # Gray
-            ProviderStatus.ERROR: "#F44336",          # Red
-            ProviderStatus.RATE_LIMITED: "#FF5722",   # Deep Orange
-            ProviderStatus.EXPIRED: "#E91E63",        # Pink
-            ProviderStatus.UNKNOWN: "#607D8B"         # Blue Gray
+            ProviderStatus.CONNECTED: "#4CAF50",  # Green
+            ProviderStatus.CONNECTING: "#FF9800",  # Orange
+            ProviderStatus.DISCONNECTED: "#9E9E9E",  # Gray
+            ProviderStatus.ERROR: "#F44336",  # Red
+            ProviderStatus.RATE_LIMITED: "#FF5722",  # Deep Orange
+            ProviderStatus.EXPIRED: "#E91E63",  # Pink
+            ProviderStatus.UNKNOWN: "#607D8B",  # Blue Gray
         }
 
         color = status_colors.get(health.status, "#607D8B")
         self.status_indicator.setStyleSheet(f"color: {color}; font-size: 16px;")
 
         # Update status text
-        status_text = health.status.value.replace('_', ' ').title()
+        status_text = health.status.value.replace("_", " ").title()
         self.status_label.setText(status_text)
 
         # Update response time
@@ -234,15 +236,15 @@ class EnhancedProviderManagerDialog(QtWidgets.QDialog):
         add_layout = QtWidgets.QHBoxLayout(add_group)
 
         self.add_openai_btn = QtWidgets.QPushButton("Add OpenAI")
-        self.add_openai_btn.clicked.connect(lambda: self._add_provider('openai'))
+        self.add_openai_btn.clicked.connect(lambda: self._add_provider("openai"))
         add_layout.addWidget(self.add_openai_btn)
 
         self.add_anthropic_btn = QtWidgets.QPushButton("Add Anthropic")
-        self.add_anthropic_btn.clicked.connect(lambda: self._add_provider('anthropic'))
+        self.add_anthropic_btn.clicked.connect(lambda: self._add_provider("anthropic"))
         add_layout.addWidget(self.add_anthropic_btn)
 
         self.add_ollama_btn = QtWidgets.QPushButton("Add Ollama")
-        self.add_ollama_btn.clicked.connect(lambda: self._add_provider('ollama'))
+        self.add_ollama_btn.clicked.connect(lambda: self._add_provider("ollama"))
         add_layout.addWidget(self.add_ollama_btn)
 
         add_layout.addStretch()
@@ -388,7 +390,7 @@ class EnhancedProviderManagerDialog(QtWidgets.QDialog):
             self,
             "Backup Credentials",
             "ai_addon_credentials_backup.enc",
-            "Encrypted Files (*.enc);;All Files (*)"
+            "Encrypted Files (*.enc);;All Files (*)",
         )
 
         if file_path:
@@ -397,29 +399,24 @@ class EnhancedProviderManagerDialog(QtWidgets.QDialog):
                     QtWidgets.QMessageBox.information(
                         self,
                         "Backup Successful",
-                        f"Credentials backed up to:\n{file_path}"
+                        f"Credentials backed up to:\n{file_path}",
                     )
                 else:
                     QtWidgets.QMessageBox.warning(
                         self,
                         "Backup Failed",
-                        "Failed to backup credentials. Check the logs for details."
+                        "Failed to backup credentials. Check the logs for details.",
                     )
             except Exception as e:
                 QtWidgets.QMessageBox.critical(
-                    self,
-                    "Backup Error",
-                    f"An error occurred during backup:\n{str(e)}"
+                    self, "Backup Error", f"An error occurred during backup:\n{str(e)}"
                 )
 
     @QtCore.Slot()
     def _restore_credentials(self):
         """Restore credentials from backup file"""
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self,
-            "Restore Credentials",
-            "",
-            "Encrypted Files (*.enc);;All Files (*)"
+            self, "Restore Credentials", "", "Encrypted Files (*.enc);;All Files (*)"
         )
 
         if file_path:
@@ -430,29 +427,31 @@ class EnhancedProviderManagerDialog(QtWidgets.QDialog):
                 "Existing credentials will not be overwritten.\n\n"
                 "Continue with restore?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                QtWidgets.QMessageBox.No
+                QtWidgets.QMessageBox.No,
             )
 
             if reply == QtWidgets.QMessageBox.Yes:
                 try:
-                    if self.credential_manager.import_credentials(file_path, overwrite=False):
+                    if self.credential_manager.import_credentials(
+                        file_path, overwrite=False
+                    ):
                         QtWidgets.QMessageBox.information(
                             self,
                             "Restore Successful",
-                            "Credentials restored successfully!"
+                            "Credentials restored successfully!",
                         )
                         self._refresh_providers()
                     else:
                         QtWidgets.QMessageBox.warning(
                             self,
                             "Restore Failed",
-                            "Failed to restore credentials. Check the logs for details."
+                            "Failed to restore credentials. Check the logs for details.",
                         )
                 except Exception as e:
                     QtWidgets.QMessageBox.critical(
                         self,
                         "Restore Error",
-                        f"An error occurred during restore:\n{str(e)}"
+                        f"An error occurred during restore:\n{str(e)}",
                     )
 
     def closeEvent(self, event):

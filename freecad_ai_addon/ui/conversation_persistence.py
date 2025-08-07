@@ -16,7 +16,7 @@ from freecad_ai_addon.ui.conversation_widget import ChatMessage, MessageType
 from freecad_ai_addon.utils.logging import get_logger
 from freecad_ai_addon.utils.config import get_config_manager
 
-logger = get_logger('conversation_persistence')
+logger = get_logger("conversation_persistence")
 
 
 class ConversationPersistence:
@@ -32,6 +32,7 @@ class ConversationPersistence:
         # Get FreeCAD user data directory
         try:
             import FreeCAD as App
+
             user_data_dir = Path(App.getUserAppDataDir())
         except ImportError:
             # Fallback to home directory if FreeCAD not available
@@ -45,9 +46,12 @@ class ConversationPersistence:
         self.conversations_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Conversations directory: {self.conversations_dir}")
 
-    def save_conversation(self, conversation_id: str,
-                          messages: List[ChatMessage],
-                          metadata: Optional[Dict[str, Any]] = None) -> bool:
+    def save_conversation(
+        self,
+        conversation_id: str,
+        messages: List[ChatMessage],
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Save conversation to disk"""
         try:
             conversation_data = {
@@ -55,7 +59,7 @@ class ConversationPersistence:
                 "created_at": datetime.now().isoformat(),
                 "updated_at": datetime.now().isoformat(),
                 "metadata": metadata or {},
-                "messages": [self._message_to_dict(msg) for msg in messages]
+                "messages": [self._message_to_dict(msg) for msg in messages],
             }
 
             # Add FreeCAD context if available
@@ -65,7 +69,7 @@ class ConversationPersistence:
 
             # Save to file
             filepath = self.conversations_dir / f"{conversation_id}.json"
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(conversation_data, f, indent=2, ensure_ascii=False)
 
             logger.info(f"Saved conversation {conversation_id} to {filepath}")
@@ -75,8 +79,7 @@ class ConversationPersistence:
             logger.error(f"Failed to save conversation {conversation_id}: {e}")
             return False
 
-    def load_conversation(self, conversation_id: str) -> Optional[
-            Dict[str, Any]]:
+    def load_conversation(self, conversation_id: str) -> Optional[Dict[str, Any]]:
         """Load conversation from disk"""
         try:
             filepath = self.conversations_dir / f"{conversation_id}.json"
@@ -84,7 +87,7 @@ class ConversationPersistence:
                 logger.warning(f"Conversation file not found: {filepath}")
                 return None
 
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 conversation_data = json.load(f)
 
             # Convert message dicts back to ChatMessage objects
@@ -108,7 +111,7 @@ class ConversationPersistence:
         try:
             for filepath in self.conversations_dir.glob("*.json"):
                 try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
+                    with open(filepath, "r", encoding="utf-8") as f:
                         data = json.load(f)
 
                     # Extract summary information
@@ -124,7 +127,7 @@ class ConversationPersistence:
                         "updated_at": data.get("updated_at"),
                         "message_count": message_count,
                         "last_message_preview": last_message,
-                        "metadata": data.get("metadata", {})
+                        "metadata": data.get("metadata", {}),
                     }
                     conversations.append(conversation_info)
 
@@ -133,10 +136,7 @@ class ConversationPersistence:
                     continue
 
             # Sort by updated_at (newest first)
-            conversations.sort(
-                key=lambda x: x.get("updated_at", ""),
-                reverse=True
-            )
+            conversations.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
 
         except Exception as e:
             logger.error(f"Failed to list conversations: {e}")
@@ -159,8 +159,9 @@ class ConversationPersistence:
             logger.error(f"Failed to delete conversation {conversation_id}: {e}")
             return False
 
-    def export_conversation(self, conversation_id: str,
-                          export_format: str = "markdown") -> Optional[str]:
+    def export_conversation(
+        self, conversation_id: str, export_format: str = "markdown"
+    ) -> Optional[str]:
         """Export conversation to different formats"""
         conversation = self.load_conversation(conversation_id)
         if not conversation:
@@ -200,9 +201,7 @@ class ConversationPersistence:
 
         # Add hash of first message for uniqueness
         if first_message:
-            message_hash = hashlib.md5(
-                first_message.encode('utf-8')
-            ).hexdigest()[:8]
+            message_hash = hashlib.md5(first_message.encode("utf-8")).hexdigest()[:8]
             return f"conv_{timestamp}_{message_hash}"
         else:
             return f"conv_{timestamp}"
@@ -236,19 +235,15 @@ class ConversationPersistence:
                 "document_name": App.ActiveDocument.Name,
                 "document_label": App.ActiveDocument.Label,
                 "object_count": len(App.ActiveDocument.Objects),
-                "objects": []
+                "objects": [],
             }
 
             # Get basic info about objects
             for obj in App.ActiveDocument.Objects[:10]:  # Limit to first 10
-                obj_info = {
-                    "name": obj.Name,
-                    "label": obj.Label,
-                    "type": obj.TypeId
-                }
+                obj_info = {"name": obj.Name, "label": obj.Label, "type": obj.TypeId}
 
                 # Add geometric info if available
-                if hasattr(obj, 'Shape') and obj.Shape:
+                if hasattr(obj, "Shape") and obj.Shape:
                     obj_info["volume"] = obj.Shape.Volume
                     obj_info["surface_area"] = obj.Shape.Area
 

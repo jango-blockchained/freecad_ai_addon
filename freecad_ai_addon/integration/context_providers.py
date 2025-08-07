@@ -11,6 +11,7 @@ from dataclasses import dataclass
 try:
     import FreeCAD as App
     import FreeCADGui as Gui
+
     FREECAD_AVAILABLE = True
 except ImportError:
     # For testing without FreeCAD
@@ -20,12 +21,13 @@ except ImportError:
 
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('context_provider')
+logger = get_logger("context_provider")
 
 
 @dataclass
 class ObjectInfo:
     """Information about a FreeCAD object"""
+
     name: str
     label: str
     type_id: str
@@ -37,6 +39,7 @@ class ObjectInfo:
 @dataclass
 class DocumentInfo:
     """Information about a FreeCAD document"""
+
     name: str
     file_path: Optional[str]
     objects: List[ObjectInfo]
@@ -47,6 +50,7 @@ class DocumentInfo:
 @dataclass
 class WorkbenchInfo:
     """Information about the current workbench"""
+
     name: str
     active_tool: Optional[str]
     available_commands: List[str]
@@ -55,6 +59,7 @@ class WorkbenchInfo:
 @dataclass
 class FreeCADContext:
     """Complete FreeCAD context information"""
+
     active_document: Optional[DocumentInfo]
     all_documents: List[DocumentInfo]
     workbench: Optional[WorkbenchInfo]
@@ -93,7 +98,7 @@ class FreeCADContextProvider:
                 workbench=self._get_workbench_info(),
                 selection=self._get_selection_info(),
                 view_info=self._get_view_info(),
-                preferences=self._get_preferences_info()
+                preferences=self._get_preferences_info(),
             )
 
             self.last_context = context
@@ -124,10 +129,10 @@ class FreeCADContextProvider:
                         "label": obj.label,
                         "type": obj.type_id,
                         "properties": obj.properties,
-                        "shape_info": obj.shape_info
+                        "shape_info": obj.shape_info,
                     }
                     for obj in selection
-                ]
+                ],
             }
 
             return context
@@ -172,20 +177,18 @@ class FreeCADContextProvider:
                 "selected_count": len(doc_info.selected_objects),
                 "visible_count": len(doc_info.visible_objects),
                 "objects": [
-                    {
-                        "name": obj.name,
-                        "label": obj.label,
-                        "type": obj.type_id
-                    }
+                    {"name": obj.name, "label": obj.label, "type": obj.type_id}
                     for obj in doc_info.objects
-                ]
+                ],
             }
 
         except Exception as e:
             logger.error("Failed to get document summary: %s", str(e))
             return {"error": str(e)}
 
-    def get_geometric_analysis(self, object_names: Optional[List[str]] = None) -> Dict[str, Any]:
+    def get_geometric_analysis(
+        self, object_names: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """
         Get geometric analysis of objects.
 
@@ -219,7 +222,7 @@ class FreeCADContextProvider:
                 "objects": [],
                 "total_volume": 0.0,
                 "total_area": 0.0,
-                "bounding_box": None
+                "bounding_box": None,
             }
 
             all_bbox_points = []
@@ -235,10 +238,12 @@ class FreeCADContextProvider:
 
                 if obj_analysis.get("bounding_box"):
                     bbox = obj_analysis["bounding_box"]
-                    all_bbox_points.extend([
-                        (bbox["x_min"], bbox["y_min"], bbox["z_min"]),
-                        (bbox["x_max"], bbox["y_max"], bbox["z_max"])
-                    ])
+                    all_bbox_points.extend(
+                        [
+                            (bbox["x_min"], bbox["y_min"], bbox["z_min"]),
+                            (bbox["x_max"], bbox["y_max"], bbox["z_max"]),
+                        ]
+                    )
 
             # Calculate combined bounding box
             if all_bbox_points:
@@ -247,14 +252,17 @@ class FreeCADContextProvider:
                 z_coords = [p[2] for p in all_bbox_points]
 
                 analysis["bounding_box"] = {
-                    "x_min": min(x_coords), "x_max": max(x_coords),
-                    "y_min": min(y_coords), "y_max": max(y_coords),
-                    "z_min": min(z_coords), "z_max": max(z_coords),
+                    "x_min": min(x_coords),
+                    "x_max": max(x_coords),
+                    "y_min": min(y_coords),
+                    "y_max": max(y_coords),
+                    "z_min": min(z_coords),
+                    "z_max": max(z_coords),
                     "dimensions": {
                         "length": max(x_coords) - min(x_coords),
                         "width": max(y_coords) - min(y_coords),
-                        "height": max(z_coords) - min(z_coords)
-                    }
+                        "height": max(z_coords) - min(z_coords),
+                    },
                 }
 
             return analysis
@@ -287,7 +295,7 @@ class FreeCADContextProvider:
                 # Look for selected sketch
                 selection = Gui.Selection.getSelection()
                 for obj in selection:
-                    if hasattr(obj, 'TypeId') and 'Sketch' in obj.TypeId:
+                    if hasattr(obj, "TypeId") and "Sketch" in obj.TypeId:
                         sketch = obj
                         break
 
@@ -301,7 +309,7 @@ class FreeCADContextProvider:
                 "geometry_count": len(sketch.Geometry),
                 "constraints": [],
                 "geometry": [],
-                "fully_constrained": False
+                "fully_constrained": False,
             }
 
             # Get constraint information
@@ -309,10 +317,14 @@ class FreeCADContextProvider:
                 constraint_info = {
                     "index": i,
                     "type": constraint.Type,
-                    "name": constraint.Name if hasattr(constraint, 'Name') else f"Constraint{i}",
+                    "name": (
+                        constraint.Name
+                        if hasattr(constraint, "Name")
+                        else f"Constraint{i}"
+                    ),
                 }
 
-                if hasattr(constraint, 'Value'):
+                if hasattr(constraint, "Value"):
                     constraint_info["value"] = constraint.Value
 
                 context["constraints"].append(constraint_info)
@@ -322,17 +334,19 @@ class FreeCADContextProvider:
                 geo_info = {
                     "index": i,
                     "type": type(geo).__name__,
-                    "construction": geo.Construction if hasattr(geo, 'Construction') else False
+                    "construction": (
+                        geo.Construction if hasattr(geo, "Construction") else False
+                    ),
                 }
 
                 # Add type-specific information
-                if hasattr(geo, 'Center'):
+                if hasattr(geo, "Center"):
                     geo_info["center"] = [geo.Center.x, geo.Center.y]
-                if hasattr(geo, 'Radius'):
+                if hasattr(geo, "Radius"):
                     geo_info["radius"] = geo.Radius
-                if hasattr(geo, 'StartPoint'):
+                if hasattr(geo, "StartPoint"):
                     geo_info["start_point"] = [geo.StartPoint.x, geo.StartPoint.y]
-                if hasattr(geo, 'EndPoint'):
+                if hasattr(geo, "EndPoint"):
                     geo_info["end_point"] = [geo.EndPoint.x, geo.EndPoint.y]
 
                 context["geometry"].append(geo_info)
@@ -406,10 +420,10 @@ class FreeCADContextProvider:
 
         return DocumentInfo(
             name=doc.Name,
-            file_path=doc.FileName if hasattr(doc, 'FileName') else None,
+            file_path=doc.FileName if hasattr(doc, "FileName") else None,
             objects=objects,
             selected_objects=selected_objects,
-            visible_objects=visible_objects
+            visible_objects=visible_objects,
         )
 
     def _create_object_info(self, obj) -> ObjectInfo:
@@ -420,11 +434,15 @@ class FreeCADContextProvider:
             try:
                 prop_value = getattr(obj, prop_name)
                 # Convert to serializable format
-                if hasattr(prop_value, '__dict__'):
-                    if hasattr(prop_value, 'x') and hasattr(prop_value, 'y'):
+                if hasattr(prop_value, "__dict__"):
+                    if hasattr(prop_value, "x") and hasattr(prop_value, "y"):
                         # Vector-like object
-                        if hasattr(prop_value, 'z'):
-                            properties[prop_name] = [prop_value.x, prop_value.y, prop_value.z]
+                        if hasattr(prop_value, "z"):
+                            properties[prop_name] = [
+                                prop_value.x,
+                                prop_value.y,
+                                prop_value.z,
+                            ]
                         else:
                             properties[prop_name] = [prop_value.x, prop_value.y]
                     else:
@@ -437,17 +455,21 @@ class FreeCADContextProvider:
 
         # Get placement information
         placement = None
-        if hasattr(obj, 'Placement'):
+        if hasattr(obj, "Placement"):
             p = obj.Placement
             placement = {
                 "position": [p.Base.x, p.Base.y, p.Base.z],
-                "rotation": [p.Rotation.Q[0], p.Rotation.Q[1],
-                           p.Rotation.Q[2], p.Rotation.Q[3]]
+                "rotation": [
+                    p.Rotation.Q[0],
+                    p.Rotation.Q[1],
+                    p.Rotation.Q[2],
+                    p.Rotation.Q[3],
+                ],
             }
 
         # Get shape information if available
         shape_info = None
-        if hasattr(obj, 'Shape') and obj.Shape:
+        if hasattr(obj, "Shape") and obj.Shape:
             shape_info = self._extract_shape_info(obj.Shape)
 
         return ObjectInfo(
@@ -456,7 +478,7 @@ class FreeCADContextProvider:
             type_id=obj.TypeId,
             properties=properties,
             placement=placement,
-            shape_info=shape_info
+            shape_info=shape_info,
         )
 
     def _extract_shape_info(self, shape) -> Dict[str, Any]:
@@ -465,26 +487,31 @@ class FreeCADContextProvider:
             info = {
                 "type": shape.ShapeType,
                 "valid": shape.isValid(),
-                "volume": shape.Volume if hasattr(shape, 'Volume') else None,
-                "area": shape.Area if hasattr(shape, 'Area') else None,
-                "length": shape.Length if hasattr(shape, 'Length') else None,
-                "face_count": len(shape.Faces) if hasattr(shape, 'Faces') else 0,
-                "edge_count": len(shape.Edges) if hasattr(shape, 'Edges') else 0,
-                "vertex_count": len(shape.Vertexes) if hasattr(shape, 'Vertexes') else 0
+                "volume": shape.Volume if hasattr(shape, "Volume") else None,
+                "area": shape.Area if hasattr(shape, "Area") else None,
+                "length": shape.Length if hasattr(shape, "Length") else None,
+                "face_count": len(shape.Faces) if hasattr(shape, "Faces") else 0,
+                "edge_count": len(shape.Edges) if hasattr(shape, "Edges") else 0,
+                "vertex_count": (
+                    len(shape.Vertexes) if hasattr(shape, "Vertexes") else 0
+                ),
             }
 
             # Bounding box
-            if hasattr(shape, 'BoundBox'):
+            if hasattr(shape, "BoundBox"):
                 bbox = shape.BoundBox
                 info["bounding_box"] = {
-                    "x_min": bbox.XMin, "x_max": bbox.XMax,
-                    "y_min": bbox.YMin, "y_max": bbox.YMax,
-                    "z_min": bbox.ZMin, "z_max": bbox.ZMax,
+                    "x_min": bbox.XMin,
+                    "x_max": bbox.XMax,
+                    "y_min": bbox.YMin,
+                    "y_max": bbox.YMax,
+                    "z_min": bbox.ZMin,
+                    "z_max": bbox.ZMax,
                     "dimensions": {
                         "length": bbox.XLength,
                         "width": bbox.YLength,
-                        "height": bbox.ZLength
-                    }
+                        "height": bbox.ZLength,
+                    },
                 }
 
             return info
@@ -495,13 +522,9 @@ class FreeCADContextProvider:
 
     def _analyze_object_geometry(self, obj) -> Dict[str, Any]:
         """Analyze geometry of a single object"""
-        analysis = {
-            "name": obj.Name,
-            "label": obj.Label,
-            "type": obj.TypeId
-        }
+        analysis = {"name": obj.Name, "label": obj.Label, "type": obj.TypeId}
 
-        if hasattr(obj, 'Shape') and obj.Shape:
+        if hasattr(obj, "Shape") and obj.Shape:
             shape_info = self._extract_shape_info(obj.Shape)
             analysis.update(shape_info)
 
@@ -528,9 +551,9 @@ class FreeCADContextProvider:
             workbench = Gui.activeWorkbench()
 
             return WorkbenchInfo(
-                name=workbench.name() if hasattr(workbench, 'name') else str(workbench),
+                name=workbench.name() if hasattr(workbench, "name") else str(workbench),
                 active_tool=None,  # Would need more complex detection
-                available_commands=[]  # Would need workbench introspection
+                available_commands=[],  # Would need workbench introspection
             )
         except Exception as e:
             logger.error("Failed to get workbench info: %s", str(e))
@@ -549,13 +572,17 @@ class FreeCADContextProvider:
             info = {}
 
             # Camera information
-            if hasattr(view, 'getCameraNode'):
+            if hasattr(view, "getCameraNode"):
                 camera = view.getCameraNode()
                 if camera:
-                    info["camera_type"] = "perspective" if camera.getTypeId().find("Perspective") >= 0 else "orthographic"
+                    info["camera_type"] = (
+                        "perspective"
+                        if camera.getTypeId().find("Perspective") >= 0
+                        else "orthographic"
+                    )
 
             # View direction
-            if hasattr(view, 'getViewDirection'):
+            if hasattr(view, "getViewDirection"):
                 view_dir = view.getViewDirection()
                 info["view_direction"] = [view_dir.x, view_dir.y, view_dir.z]
 
@@ -575,11 +602,11 @@ class FreeCADContextProvider:
             prefs = {}
 
             # Units
-            if hasattr(App, 'ParamGet'):
+            if hasattr(App, "ParamGet"):
                 param = App.ParamGet("User parameter:BaseApp/Preferences/Units")
                 prefs["units"] = {
                     "user_schema": param.GetInt("UserSchema", 0),
-                    "decimals": param.GetInt("Decimals", 2)
+                    "decimals": param.GetInt("Decimals", 2),
                 }
 
             return prefs
@@ -594,7 +621,7 @@ class FreeCADContextProvider:
             name="MockObject",
             label="Mock Object",
             type_id="Part::Box",
-            properties={"Length": 10, "Width": 10, "Height": 10}
+            properties={"Length": 10, "Width": 10, "Height": 10},
         )
 
         mock_doc = DocumentInfo(
@@ -602,18 +629,16 @@ class FreeCADContextProvider:
             file_path=None,
             objects=[mock_object],
             selected_objects=[],
-            visible_objects=["MockObject"]
+            visible_objects=["MockObject"],
         )
 
         return FreeCADContext(
             active_document=mock_doc,
             all_documents=[mock_doc],
             workbench=WorkbenchInfo(
-                name="MockWorkbench",
-                active_tool=None,
-                available_commands=[]
+                name="MockWorkbench", active_tool=None, available_commands=[]
             ),
             selection=[],
             view_info={},
-            preferences={}
+            preferences={},
         )

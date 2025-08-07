@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="13" failures="10" skipped="0" tests="43" time="8.588" timestamp="2025-08-06T21:58:23.308821+02:00" hostname="macbook-pro-jan"><testcase classname="tests.test_config.TestConfigManager" name="test_default_config_creation" time="0.006" /><testcase classname="tests.test_config.TestConfigManager" name="test_get_config_value" time="0.002" /><testcase classname="tests.test_config.TestConfigManager" name="test_set_config_value" time="0.003" /><testcase classname="tests.test_config.TestConfigManager" name="test_config_persistence" time="0.003" /><testcase classname="tests.test_config.TestConfigManager" name="test_export_import_config" time="0.005" /><testcase classname="tests.test_conversation_widget" name="test_conversation_widget" time="0.294" /><testcase classname="tests.test_freecad_integration" name="test_freecad_context" time="0.001" /><testcase classname="tests.test_freecad_integration" name="test_selection_observer" time="0.001" /><testcase classname="tests.test_freecad_integration" name="test_conversation_dock" time="0.001" /><testcase classname="tests.test_mcp_integration.TestMCPConnection" name="test_mcp_client_initialization" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:29: in mcp_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPConnection" name="test_stdio_connection_establishment" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:29: in mcp_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPConnection" name="test_http_connection_establishment" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:29: in mcp_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPConnection" name="test_connection_failure_handling" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:29: in mcp_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPConnection" name="test_connection_timeout" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:29: in mcp_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPProtocol" name="test_tool_discovery" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:169: in connected_client
+    client = MCPClientManager()
+             ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPProtocol" name="test_resource_discovery" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:169: in connected_client
+    client = MCPClientManager()
+             ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPProtocol" name="test_tool_execution" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:169: in connected_client
+    client = MCPClientManager()
+             ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPProtocol" name="test_resource_reading" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:169: in connected_client
+    client = MCPClientManager()
+             ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPProtocol" name="test_protocol_error_handling" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:169: in connected_client
+    client = MCPClientManager()
+             ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPSessionManagement" name="test_session_creation" time="0.077"><failure message="AttributeError: 'ConnectionManager' object has no attribute 'create_session'">tests/test_mcp_integration.py:343: in test_session_creation
+    session_id = await connection_manager.create_session(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'ConnectionManager' object has no attribute 'create_session'</failure></testcase><testcase classname="tests.test_mcp_integration.TestMCPSessionManagement" name="test_session_persistence" time="0.002"><failure message="AttributeError: &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a0d4e210&gt; does not have the attribute '_connect_to_server'">tests/test_mcp_integration.py:355: in test_session_persistence
+    with patch.object(connection_manager, "_connect_to_server") as mock_connect:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../anaconda3/lib/python3.13/unittest/mock.py:1497: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+../../anaconda3/lib/python3.13/unittest/mock.py:1467: in get_original
+    raise AttributeError(
+E   AttributeError: &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a0d4e210&gt; does not have the attribute '_connect_to_server'</failure></testcase><testcase classname="tests.test_mcp_integration.TestMCPSessionManagement" name="test_session_cleanup" time="0.003"><failure message="AttributeError: &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a1bb3750&gt; does not have the attribute '_connect_to_server'">tests/test_mcp_integration.py:378: in test_session_cleanup
+    with patch.object(connection_manager, "_connect_to_server") as mock_connect:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../anaconda3/lib/python3.13/unittest/mock.py:1497: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+../../anaconda3/lib/python3.13/unittest/mock.py:1467: in get_original
+    raise AttributeError(
+E   AttributeError: &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a1bb3750&gt; does not have the attribute '_connect_to_server'</failure></testcase><testcase classname="tests.test_mcp_integration.TestMCPSessionManagement" name="test_concurrent_sessions" time="0.003"><failure message="AttributeError: &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a1bb2c10&gt; does not have the attribute '_connect_to_server'">tests/test_mcp_integration.py:396: in test_concurrent_sessions
+    with patch.object(connection_manager, "_connect_to_server") as mock_connect:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../anaconda3/lib/python3.13/unittest/mock.py:1497: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+../../anaconda3/lib/python3.13/unittest/mock.py:1467: in get_original
+    raise AttributeError(
+E   AttributeError: &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a1bb2c10&gt; does not have the attribute '_connect_to_server'</failure></testcase><testcase classname="tests.test_mcp_integration.TestMCPErrorHandling" name="test_network_error_recovery" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:427: in error_prone_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPErrorHandling" name="test_server_restart_handling" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:427: in error_prone_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPErrorHandling" name="test_malformed_response_handling" time="0.001"><error message="failed on setup with &quot;TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'&quot;">tests/test_mcp_integration.py:427: in error_prone_client
+    return MCPClientManager()
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</error></testcase><testcase classname="tests.test_mcp_integration.TestMCPIntegration" name="test_complete_workflow" time="0.002"><failure message="TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'">tests/test_mcp_integration.py:484: in test_complete_workflow
+    client = MCPClientManager()
+             ^^^^^^^^^^^^^^^^^^
+E   TypeError: MCPClientManager.__init__() missing 1 required positional argument: 'config_manager'</failure></testcase><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_credential_storage_integration" time="0.063"><failure message="AssertionError: assert False&#10; +  where False = validate_credential('openai', 'api_key')&#10; +    where validate_credential = &lt;freecad_ai_addon.utils.security.CredentialManager object at 0x7794a0d4ead0&gt;.validate_credential&#10; +      where &lt;freecad_ai_addon.utils.security.CredentialManager object at 0x7794a0d4ead0&gt; = &lt;tests.test_provider_management.TestProviderManagementSystem object at 0x7794ab9f3610&gt;.credential_manager">tests/test_provider_management.py:52: in test_credential_storage_integration
+    assert self.credential_manager.validate_credential("openai", "api_key")
+E   AssertionError: assert False
+E    +  where False = validate_credential('openai', 'api_key')
+E    +    where validate_credential = &lt;freecad_ai_addon.utils.security.CredentialManager object at 0x7794a0d4ead0&gt;.validate_credential
+E    +      where &lt;freecad_ai_addon.utils.security.CredentialManager object at 0x7794a0d4ead0&gt; = &lt;tests.test_provider_management.TestProviderManagementSystem object at 0x7794ab9f3610&gt;.credential_manager</failure></testcase><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_provider_status_monitoring" time="0.065"><failure message="AssertionError: assert &lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt; == &lt;ProviderStatus.CONNECTED: 'connected'&gt;&#10; +  where &lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt; = ProviderHealth(status=&lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt;, last_check=1754510306.0372112, response_time=None, error_message='No API key configured', rate_limit_remaining=None, rate_limit_reset=None, usage_stats={}).status&#10; +  and   &lt;ProviderStatus.CONNECTED: 'connected'&gt; = ProviderStatus.CONNECTED">tests/test_provider_management.py:75: in test_provider_status_monitoring
+    assert health.status == ProviderStatus.CONNECTED
+E   AssertionError: assert &lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt; == &lt;ProviderStatus.CONNECTED: 'connected'&gt;
+E    +  where &lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt; = ProviderHealth(status=&lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt;, last_check=1754510306.0372112, response_time=None, error_message='No API key configured', rate_limit_remaining=None, rate_limit_reset=None, usage_stats={}).status
+E    +  and   &lt;ProviderStatus.CONNECTED: 'connected'&gt; = ProviderStatus.CONNECTED</failure></testcase><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_connection_manager_retry_logic" time="0.163"><failure message="assert False">tests/test_provider_management.py:127: in test_connection_manager_retry_logic
+    assert success
+E   assert False</failure></testcase><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_connection_manager_fallback" time="0.060"><failure message="AssertionError: assert False&#10; +  where False = is_connected('anthropic')&#10; +    where is_connected = &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a0c1c190&gt;.is_connected">tests/test_provider_management.py:176: in test_connection_manager_fallback
+    assert connection_manager.is_connected("anthropic")
+E   AssertionError: assert False
+E    +  where False = is_connected('anthropic')
+E    +    where is_connected = &lt;freecad_ai_addon.core.connection_manager.ConnectionManager object at 0x7794a0c1c190&gt;.is_connected</failure></testcase><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_connection_config_persistence" time="0.068" /><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_credential_backup_restore" time="0.061" /><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_provider_status_callbacks" time="0.068"><failure message="AssertionError: assert &lt;ProviderStatus.CONNECTED: 'connected'&gt; in [&lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt;]&#10; +  where &lt;ProviderStatus.CONNECTED: 'connected'&gt; = ProviderStatus.CONNECTED">tests/test_provider_management.py:256: in test_provider_status_callbacks
+    assert ProviderStatus.CONNECTED in callback_events
+E   AssertionError: assert &lt;ProviderStatus.CONNECTED: 'connected'&gt; in [&lt;ProviderStatus.DISCONNECTED: 'disconnected'&gt;]
+E    +  where &lt;ProviderStatus.CONNECTED: 'connected'&gt; = ProviderStatus.CONNECTED</failure></testcase><testcase classname="tests.test_provider_management.TestProviderManagementSystem" name="test_integration_provider_lifecycle" time="0.061" /><testcase classname="tests.test_security.TestCredentialManager" name="test_store_and_retrieve_credential" time="0.062" /><testcase classname="tests.test_security.TestCredentialManager" name="test_credential_not_found" time="0.055" /><testcase classname="tests.test_security.TestCredentialManager" name="test_remove_credential" time="0.089" /><testcase classname="tests.test_security.TestCredentialManager" name="test_list_providers" time="0.065" /><testcase classname="tests.test_security.TestCredentialManager" name="test_list_credential_types" time="0.077" /><testcase classname="tests.test_security.TestCredentialManager" name="test_validate_credential" time="0.058" /><testcase classname="tests.test_security.TestCredentialManager" name="test_encryption_persistence" time="0.118" /><testcase classname="tests.test_security.TestCredentialManager" name="test_export_import_credentials" time="0.060" /></testsuite></testsuites>

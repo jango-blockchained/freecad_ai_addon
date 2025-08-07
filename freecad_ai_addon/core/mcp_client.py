@@ -18,12 +18,13 @@ from mcp.client.sse import sse_client
 from freecad_ai_addon.utils.logging import get_logger
 from freecad_ai_addon.utils.config import ConfigManager
 
-logger = get_logger('mcp_client')
+logger = get_logger("mcp_client")
 
 
 @dataclass
 class MCPServerConfig:
     """Configuration for an MCP server connection"""
+
     name: str
     transport: str  # 'stdio', 'http', 'sse'
     command: Optional[str] = None
@@ -37,6 +38,7 @@ class MCPServerConfig:
 @dataclass
 class MCPTool:
     """Represents an MCP tool with metadata"""
+
     name: str
     description: str
     input_schema: Dict[str, Any]
@@ -46,6 +48,7 @@ class MCPTool:
 @dataclass
 class MCPResource:
     """Represents an MCP resource with metadata"""
+
     uri: str
     name: str
     description: str
@@ -77,7 +80,9 @@ class MCPClientManager:
         # Event callbacks
         self.on_connection_status_changed: Optional[Callable[[str, bool], None]] = None
         self.on_tools_updated: Optional[Callable[[str, List[MCPTool]], None]] = None
-        self.on_resources_updated: Optional[Callable[[str, List[MCPResource]], None]] = None
+        self.on_resources_updated: Optional[
+            Callable[[str, List[MCPResource]], None]
+        ] = None
 
     async def initialize(self) -> None:
         """Initialize the MCP client manager and load server configurations"""
@@ -103,7 +108,7 @@ class MCPClientManager:
                     url=server_data.get("url"),
                     env=server_data.get("env", {}),
                     timeout=server_data.get("timeout", 30),
-                    enabled=server_data.get("enabled", True)
+                    enabled=server_data.get("enabled", True),
                 )
 
                 self.server_configs[server_name] = config
@@ -123,7 +128,7 @@ class MCPClientManager:
             if config.enabled:
                 task = asyncio.create_task(
                     self._connect_server(server_name, config),
-                    name=f"connect_{server_name}"
+                    name=f"connect_{server_name}",
                 )
                 connection_tasks.append(task)
 
@@ -133,11 +138,18 @@ class MCPClientManager:
 
             # Log results
             for i, (server_name, config) in enumerate(
-                [(name, cfg) for name, cfg in self.server_configs.items() if cfg.enabled]
+                [
+                    (name, cfg)
+                    for name, cfg in self.server_configs.items()
+                    if cfg.enabled
+                ]
             ):
                 if isinstance(results[i], Exception):
-                    logger.error("Failed to connect to server %s: %s",
-                               server_name, str(results[i]))
+                    logger.error(
+                        "Failed to connect to server %s: %s",
+                        server_name,
+                        str(results[i]),
+                    )
                 else:
                     logger.info("Successfully connected to server %s", server_name)
 
@@ -150,7 +162,9 @@ class MCPClientManager:
             config: Server configuration
         """
         try:
-            logger.info("Connecting to MCP server %s via %s", server_name, config.transport)
+            logger.info(
+                "Connecting to MCP server %s via %s", server_name, config.transport
+            )
 
             if config.transport == "stdio":
                 await self._connect_stdio_server(server_name, config)
@@ -176,15 +190,17 @@ class MCPClientManager:
                 self.on_connection_status_changed(server_name, False)
             raise
 
-    async def _connect_stdio_server(self, server_name: str, config: MCPServerConfig) -> None:
+    async def _connect_stdio_server(
+        self, server_name: str, config: MCPServerConfig
+    ) -> None:
         """Connect to an MCP server via stdio transport"""
         if not config.command:
-            raise ValueError(f"Command required for stdio transport (server: {server_name})")
+            raise ValueError(
+                f"Command required for stdio transport (server: {server_name})"
+            )
 
         server_params = StdioServerParameters(
-            command=config.command,
-            args=config.args or [],
-            env=config.env
+            command=config.command, args=config.args or [], env=config.env
         )
 
         stdio_transport = await self.exit_stack.enter_async_context(
@@ -192,14 +208,14 @@ class MCPClientManager:
         )
         read, write = stdio_transport
 
-        session = await self.exit_stack.enter_async_context(
-            ClientSession(read, write)
-        )
+        session = await self.exit_stack.enter_async_context(ClientSession(read, write))
 
         await session.initialize()
         self.servers[server_name] = session
 
-    async def _connect_http_server(self, server_name: str, config: MCPServerConfig) -> None:
+    async def _connect_http_server(
+        self, server_name: str, config: MCPServerConfig
+    ) -> None:
         """Connect to an MCP server via HTTP transport"""
         if not config.url:
             raise ValueError(f"URL required for HTTP transport (server: {server_name})")
@@ -209,14 +225,14 @@ class MCPClientManager:
         )
         read, write, _ = http_transport
 
-        session = await self.exit_stack.enter_async_context(
-            ClientSession(read, write)
-        )
+        session = await self.exit_stack.enter_async_context(ClientSession(read, write))
 
         await session.initialize()
         self.servers[server_name] = session
 
-    async def _connect_sse_server(self, server_name: str, config: MCPServerConfig) -> None:
+    async def _connect_sse_server(
+        self, server_name: str, config: MCPServerConfig
+    ) -> None:
         """Connect to an MCP server via SSE transport"""
         if not config.url:
             raise ValueError(f"URL required for SSE transport (server: {server_name})")
@@ -226,9 +242,7 @@ class MCPClientManager:
         )
         read, write = sse_transport
 
-        session = await self.exit_stack.enter_async_context(
-            ClientSession(read, write)
-        )
+        session = await self.exit_stack.enter_async_context(ClientSession(read, write))
 
         await session.initialize()
         self.servers[server_name] = session
@@ -247,12 +261,14 @@ class MCPClientManager:
             for item in tools_response:
                 if isinstance(item, tuple) and item[0] == "tools":
                     for tool in item[1]:
-                        tools.append(MCPTool(
-                            name=tool.name,
-                            description=tool.description or "",
-                            input_schema=tool.inputSchema or {},
-                            server_name=server_name
-                        ))
+                        tools.append(
+                            MCPTool(
+                                name=tool.name,
+                                description=tool.description or "",
+                                input_schema=tool.inputSchema or {},
+                                server_name=server_name,
+                            )
+                        )
 
             self._tools_cache[server_name] = tools
             if self.on_tools_updated:
@@ -263,24 +279,31 @@ class MCPClientManager:
             resources = []
 
             for resource in resources_response.resources:
-                resources.append(MCPResource(
-                    uri=str(resource.uri),
-                    name=resource.name or str(resource.uri),
-                    description=resource.description or "",
-                    mime_type=resource.mimeType,
-                    server_name=server_name
-                ))
+                resources.append(
+                    MCPResource(
+                        uri=str(resource.uri),
+                        name=resource.name or str(resource.uri),
+                        description=resource.description or "",
+                        mime_type=resource.mimeType,
+                        server_name=server_name,
+                    )
+                )
 
             self._resources_cache[server_name] = resources
             if self.on_resources_updated:
                 self.on_resources_updated(server_name, resources)
 
-            logger.info("Refreshed capabilities for server %s: %d tools, %d resources",
-                       server_name, len(tools), len(resources))
+            logger.info(
+                "Refreshed capabilities for server %s: %d tools, %d resources",
+                server_name,
+                len(tools),
+                len(resources),
+            )
 
         except Exception as e:
-            logger.error("Failed to refresh capabilities for server %s: %s",
-                        server_name, str(e))
+            logger.error(
+                "Failed to refresh capabilities for server %s: %s", server_name, str(e)
+            )
 
     def get_all_tools(self) -> List[MCPTool]:
         """Get all available tools from all connected servers"""
@@ -310,10 +333,16 @@ class MCPClientManager:
 
     def get_connected_servers(self) -> List[str]:
         """Get list of connected server names"""
-        return [name for name, connected in self._connection_status.items() if connected]
+        return [
+            name for name, connected in self._connection_status.items() if connected
+        ]
 
-    async def call_tool(self, tool_name: str, arguments: Dict[str, Any],
-                       server_name: Optional[str] = None) -> Any:
+    async def call_tool(
+        self,
+        tool_name: str,
+        arguments: Dict[str, Any],
+        server_name: Optional[str] = None,
+    ) -> Any:
         """
         Call a tool on an MCP server.
 
@@ -341,7 +370,9 @@ class MCPClientManager:
                     break
 
             if not tool:
-                raise ValueError(f"Tool '{tool_name}' not found in any connected server")
+                raise ValueError(
+                    f"Tool '{tool_name}' not found in any connected server"
+                )
 
         # Get the session
         session = self.servers.get(server_name)
@@ -349,8 +380,12 @@ class MCPClientManager:
             raise ValueError(f"Server '{server_name}' not connected")
 
         try:
-            logger.info("Calling tool %s on server %s with args: %s",
-                       tool_name, server_name, arguments)
+            logger.info(
+                "Calling tool %s on server %s with args: %s",
+                tool_name,
+                server_name,
+                arguments,
+            )
             result = await session.call_tool(tool_name, arguments)
             logger.info("Tool %s executed successfully", tool_name)
             return result
@@ -395,6 +430,7 @@ class MCPClientManager:
         try:
             logger.info("Reading resource %s from server %s", uri, server_name)
             from pydantic import AnyUrl
+
             result = await session.read_resource(AnyUrl(uri))
             logger.info("Resource %s read successfully", uri)
             return result
@@ -409,7 +445,7 @@ class MCPClientManager:
         for server_name in self.get_connected_servers():
             task = asyncio.create_task(
                 self._refresh_server_capabilities(server_name),
-                name=f"refresh_{server_name}"
+                name=f"refresh_{server_name}",
             )
             refresh_tasks.append(task)
 
@@ -438,7 +474,7 @@ class MCPClientManager:
             "url": config.url,
             "env": config.env,
             "timeout": config.timeout,
-            "enabled": config.enabled
+            "enabled": config.enabled,
         }
         self.config_manager.set("mcp.servers", servers_config)
 

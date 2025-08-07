@@ -9,23 +9,30 @@ from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QTabWidget, QFrame, QLabel
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QTabWidget,
+    QFrame,
+    QLabel,
 )
 
 from freecad_ai_addon.ui.conversation_widget import ConversationWidget
 from freecad_ai_addon.integration.agent_conversation_integration import (
-    AgentConversationIntegration, AgentControlPanel, AgentStatusPanel
+    AgentConversationIntegration,
+    AgentControlPanel,
+    AgentStatusPanel,
 )
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('enhanced_conversation_widget')
+logger = get_logger("enhanced_conversation_widget")
 
 
 class EnhancedConversationWidget(QWidget):
     """
     Enhanced conversation widget with integrated agent controls
-    
+
     This widget combines the standard conversation interface with
     agent control panels, providing a unified interface for both
     regular AI conversations and autonomous agent operations.
@@ -37,10 +44,10 @@ class EnhancedConversationWidget(QWidget):
         self.agent_integration: Optional[AgentConversationIntegration] = None
         self.control_panel: Optional[AgentControlPanel] = None
         self.status_panel: Optional[AgentStatusPanel] = None
-        
+
         self._setup_ui()
         self._setup_agent_integration()
-        
+
         logger.info("Enhanced conversation widget initialized")
 
     def _setup_ui(self):
@@ -72,39 +79,43 @@ class EnhancedConversationWidget(QWidget):
         controls_widget = QWidget()
         controls_widget.setMinimumWidth(280)
         controls_widget.setMaximumWidth(400)
-        
+
         layout = QVBoxLayout(controls_widget)
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
         # Title
         title_frame = QFrame()
-        title_frame.setStyleSheet("""
+        title_frame.setStyleSheet(
+            """
             QFrame {
                 background-color: #f0f0f0;
                 border-radius: 8px;
                 padding: 8px;
             }
-        """)
+        """
+        )
         title_layout = QHBoxLayout(title_frame)
         title_layout.setContentsMargins(8, 8, 8, 8)
-        
+
         title_label = QLabel("🤖 Agent Controls")
-        title_label.setStyleSheet("""
+        title_label.setStyleSheet(
+            """
             QLabel {
                 font-weight: bold;
                 font-size: 14px;
                 color: #333;
             }
-        """)
+        """
+        )
         title_layout.addWidget(title_label)
         title_layout.addStretch()
-        
+
         layout.addWidget(title_frame)
 
         # Tabbed interface for different control panels
         tab_widget = QTabWidget()
-        
+
         # Control Panel Tab
         self.control_panel = AgentControlPanel()
         tab_widget.addTab(self.control_panel, "Settings")
@@ -118,7 +129,7 @@ class EnhancedConversationWidget(QWidget):
         tab_widget.addTab(info_panel, "Info")
 
         layout.addWidget(tab_widget)
-        
+
         return controls_widget
 
     def _create_info_panel(self) -> QWidget:
@@ -128,7 +139,8 @@ class EnhancedConversationWidget(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
 
         # Agent capabilities info
-        capabilities_label = QLabel("""
+        capabilities_label = QLabel(
+            """
         <h3>Available Agents</h3>
         <p><b>🔧 Geometry Agent:</b><br/>
         Creates and modifies 3D geometric objects including primitives,
@@ -152,10 +164,12 @@ class EnhancedConversationWidget(QWidget):
         <p>• User approval for model modifications</p>
         <p>• Operation rollback capabilities</p>
         <p>• Maximum operation limits</p>
-        """)
-        
+        """
+        )
+
         capabilities_label.setWordWrap(True)
-        capabilities_label.setStyleSheet("""
+        capabilities_label.setStyleSheet(
+            """
             QLabel {
                 background-color: #f9f9f9;
                 border: 1px solid #ddd;
@@ -164,11 +178,12 @@ class EnhancedConversationWidget(QWidget):
                 font-size: 11px;
                 line-height: 1.4;
             }
-        """)
-        
+        """
+        )
+
         layout.addWidget(capabilities_label)
         layout.addStretch()
-        
+
         return info_widget
 
     def _setup_agent_integration(self):
@@ -178,21 +193,21 @@ class EnhancedConversationWidget(QWidget):
             self.agent_integration = AgentConversationIntegration(
                 self.conversation_widget
             )
-            
+
             # Replace control and status panels with integrated ones
             if self.control_panel:
                 self.control_panel.setParent(None)
             if self.status_panel:
                 self.status_panel.setParent(None)
-                
+
             self.control_panel = self.agent_integration.get_control_panel()
             self.status_panel = self.agent_integration.get_status_panel()
-            
+
             # Update the tabs
             self._update_control_tabs()
-            
+
             logger.info("Agent integration setup complete")
-            
+
         except Exception as e:
             logger.error(f"Failed to setup agent integration: {e}")
             self._show_integration_error(str(e))
@@ -205,7 +220,7 @@ class EnhancedConversationWidget(QWidget):
                 # Replace the first two tabs
                 child.removeTab(1)  # Remove status tab
                 child.removeTab(0)  # Remove control tab
-                
+
                 # Add integrated panels
                 child.insertTab(0, self.control_panel, "Settings")
                 child.insertTab(1, self.status_panel, "Status")
@@ -215,15 +230,18 @@ class EnhancedConversationWidget(QWidget):
         """Show an error message if integration fails"""
         error_widget = QWidget()
         layout = QVBoxLayout(error_widget)
-        
-        error_label = QLabel(f"""
+
+        error_label = QLabel(
+            f"""
         <h3>⚠️ Agent Integration Error</h3>
         <p>Failed to initialize agent framework:</p>
         <p><code>{error}</code></p>
         <p>You can still use the conversation interface normally.</p>
-        """)
+        """
+        )
         error_label.setWordWrap(True)
-        error_label.setStyleSheet("""
+        error_label.setStyleSheet(
+            """
             QLabel {
                 background-color: #fff3cd;
                 border: 1px solid #ffeaa7;
@@ -231,8 +249,9 @@ class EnhancedConversationWidget(QWidget):
                 padding: 12px;
                 color: #856404;
             }
-        """)
-        
+        """
+        )
+
         layout.addWidget(error_label)
         layout.addStretch()
 

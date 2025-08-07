@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Any
 from freecad_ai_addon.utils.logging import get_logger
 
-logger = get_logger('config')
+logger = get_logger("config")
 
 
 class ConfigManager:
@@ -27,7 +27,7 @@ class ConfigManager:
         """Load configuration from file"""
         try:
             if self.config_file.exists():
-                with open(self.config_file, 'r', encoding='utf-8') as f:
+                with open(self.config_file, "r", encoding="utf-8") as f:
                     config = json.load(f)
                 logger.info("Configuration loaded successfully")
                 return config
@@ -45,23 +45,15 @@ class ConfigManager:
             "ui": {
                 "theme": "auto",
                 "conversation_history_limit": 100,
-                "auto_save_conversations": True
+                "auto_save_conversations": True,
             },
-            "mcp": {
-                "timeout": 30,
-                "retry_attempts": 3,
-                "connection_pool_size": 5
-            },
+            "mcp": {"timeout": 30, "retry_attempts": 3, "connection_pool_size": 5},
             "agent": {
                 "safety_mode": True,
                 "confirmation_required": True,
-                "max_operations_per_session": 50
+                "max_operations_per_session": 50,
             },
-            "logging": {
-                "level": "INFO",
-                "max_log_size_mb": 10,
-                "backup_count": 5
-            }
+            "logging": {"level": "INFO", "max_log_size_mb": 10, "backup_count": 5},
         }
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -75,7 +67,7 @@ class ConfigManager:
         Returns:
             Configuration value or default
         """
-        keys = key.split('.')
+        keys = key.split(".")
         value = self._config
 
         try:
@@ -93,7 +85,7 @@ class ConfigManager:
             key: Configuration key (e.g., 'ui.theme')
             value: Value to set
         """
-        keys = key.split('.')
+        keys = key.split(".")
         config = self._config
 
         # Navigate to the parent of the target key
@@ -109,7 +101,7 @@ class ConfigManager:
     def _save_config(self) -> None:
         """Save configuration to file"""
         try:
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(self._config, f, indent=2)
             logger.info("Configuration saved successfully")
         except Exception as e:
@@ -132,7 +124,7 @@ class ConfigManager:
             True if successful, False otherwise
         """
         try:
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(self._config, f, indent=2)
             logger.info("Configuration exported to %s", file_path)
             return True
@@ -151,7 +143,7 @@ class ConfigManager:
             True if successful, False otherwise
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 imported_config = json.load(f)
 
             # Validate and merge with current config
