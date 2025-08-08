@@ -61,11 +61,13 @@ A new error emerged: `NameError: name '__file__' is not defined` in InitGui.py w
 - Verified with actual FreeCAD AppImage that path resolution now works correctly
 - Icon file is now properly found at the resolved symlink target path
 
-### 8. Fixed Variable Definition Order
+### 8. Fixed Variable Definition Order and Scoping
 
-- Ensured `WORKBENCH_ICON` variable is always defined before class definition
-- Added initialization of `WORKBENCH_ICON = ""` before the try block
-- Prevents `NameError: name 'WORKBENCH_ICON' is not defined` during class creation
+- Moved `WORKBENCH_ICON` definition to module level at the very top of InitGui.py
+- Changed from class attribute `Icon = WORKBENCH_ICON` to instance attribute `self.Icon = WORKBENCH_ICON` in `__init__`
+- Prevents `NameError: name 'WORKBENCH_ICON' is not defined` during class definition
+- Variable is now guaranteed to exist in global scope before any class definitions
+- Verified fix works correctly with AST parsing validation
 
 ## Files Modified
 
