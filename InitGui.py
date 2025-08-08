@@ -14,26 +14,105 @@ import os
 def get_addon_dir():
     """
     Get the addon directory in a way that is robust to the FreeCAD execution
-    context.
+    context, including handling symlinks properly.
     """
     try:
         # Try to get the directory from __file__ if available
         return os.path.dirname(__file__)
     except NameError:
         # Fallback for FreeCAD execution context where __file__ might not be
-        # defined. Use FreeCAD's App module to get the user data directory.
+        # defined. Try multiple approaches to find the addon directory.
         try:
-            user_data_dir = App.getUserDataDir()
-            return os.path.join(user_data_dir, "Mod", "freecad_ai_addon")
+            # First try using FreeCAD's App module
+            user_data_dir = App.getUserAppDataDir()
+            addon_path = os.path.join(user_data_dir, "Mod", "freecad_ai_addon")
+            if os.path.exists(addon_path):
+                # Resolve symlinks to get the real path
+                real_path = os.path.realpath(addon_path)
+                App.Console.PrintMessage(
+                    f"AI Workbench: Found addon at {addon_path}, real path: {real_path}\n"
+                )
+                return real_path
         except (AttributeError, NameError):
-            # Final fallback - use current working directory
-            return os.getcwd()
+            pass
+
+        # Try to find the addon directory by looking for our package.xml
+        # Start from common FreeCAD addon locations
+        possible_paths = [
+            os.path.join(
+                os.path.expanduser("~"),
+                ".local",
+                "share",
+                "FreeCAD",
+                "Mod",
+                "freecad_ai_addon",
+            ),
+            os.path.join("/usr", "share", "freecad", "Mod", "freecad_ai_addon"),
+            os.path.join(
+                os.path.expanduser("~"), ".FreeCAD", "Mod", "freecad_ai_addon"
+            ),
+        ]
+
+        for path in possible_paths:
+            if os.path.exists(path):
+                # Resolve symlinks to get the real path
+                real_path = os.path.realpath(path)
+                App.Console.PrintMessage(
+                    f"AI Workbench: Checking {path} -> {real_path}\n"
+                )
+                if os.path.exists(os.path.join(real_path, "package.xml")):
+                    App.Console.PrintMessage(
+                        f"AI Workbench: Found package.xml in {real_path}\n"
+                    )
+                    return real_path
+
+        # Final fallback - use current working directory
+        App.Console.PrintMessage(
+            "AI Workbench: Using current working directory as fallback\n"
+        )
+        return os.getcwd()
 
 
-# Get the addon directory and add it to the Python path
+# Get the addon directory and set up icon path early
 addon_dir = get_addon_dir()
 if addon_dir and addon_dir not in sys.path:
     sys.path.insert(0, addon_dir)
+
+# Initialize WORKBENCH_ICON to ensure it's always defined
+WORKBENCH_ICON = ""
+
+# Try to set up the icon path before defining the workbench class
+try:
+    App.Console.PrintMessage(
+        f"AI Workbench: Addon directory resolved to: {addon_dir}\n"
+    )
+
+    icon_path = os.path.join(
+        addon_dir,
+        "resources",
+        "icons",
+        "freecad_ai_addon.svg",
+    )
+    App.Console.PrintMessage(f"AI Workbench: Checking icon at: {icon_path}\n")
+
+    if os.path.exists(icon_path):
+        WORKBENCH_ICON = icon_path
+        App.Console.PrintMessage(f"AI Workbench: Icon found at: {icon_path}\n")
+    else:
+        App.Console.PrintError(f"AI Workbench: Icon file not found at: {icon_path}\n")
+        # List what's actually in the directory for debugging
+        if os.path.exists(addon_dir):
+            try:
+                contents = os.listdir(addon_dir)
+                App.Console.PrintMessage(
+                    f"AI Workbench: Contents of {addon_dir}: {contents}\n"
+                )
+            except OSError as e:
+                App.Console.PrintError(
+                    f"AI Workbench: Could not list directory {addon_dir}: {e}\n"
+                )
+except (OSError, AttributeError, NameError) as e:
+    App.Console.PrintError(f"AI Workbench: Icon setup error: {e}\n")
 
 
 class AIWorkbench(Gui.Workbench):
@@ -41,39 +120,11 @@ class AIWorkbench(Gui.Workbench):
 
     MenuText = "AI Assistant"
     ToolTip = "AI-powered design assistant with conversation and agent tools"
+    Icon = WORKBENCH_ICON  # Set icon as class variable during definition
 
     def __init__(self):
         """Initialize the AI workbench."""
-        try:
-            # Set the icon in __init__ method following the MCP workbench
-            # pattern
-            try:
-                icon_path = os.path.join(
-                    os.path.dirname(__file__),
-                    "resources",
-                    "icons",
-                    "freecad_ai_addon.svg",
-                )
-                App.Console.PrintMessage(
-                    f"AI Workbench: Checking icon at: {icon_path}\n"
-                )
-                if os.path.exists(icon_path):
-                    self.__class__.Icon = icon_path
-                    App.Console.PrintMessage(
-                        f"AI Workbench: Icon set to: {icon_path}\n"
-                    )
-                else:
-                    self.__class__.Icon = ""
-                    App.Console.PrintError(
-                        f"AI Workbench: Icon file not found at: {icon_path}\n"
-                    )
-            except Exception as e:
-                self.__class__.Icon = ""
-                App.Console.PrintError(f"AI Workbench: Icon setup error: {e}\n")
-
-            App.Console.PrintMessage("AI Workbench: Instance created\n")
-        except Exception as e:
-            App.Console.PrintError(f"AI Workbench: Init error: {e}\n")
+        App.Console.PrintMessage("AI Workbench: Instance created\n")
 
     def Initialize(self):
         """Initialize workbench GUI elements"""
