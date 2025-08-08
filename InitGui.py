@@ -78,7 +78,7 @@ addon_dir = get_addon_dir()
 if addon_dir and addon_dir not in sys.path:
     sys.path.insert(0, addon_dir)
 
-# Initialize WORKBENCH_ICON to ensure it's always defined
+# Initialize WORKBENCH_ICON to ensure it's always defined before any class definition
 WORKBENCH_ICON = ""
 
 # Try to set up the icon path before defining the workbench class
@@ -107,12 +107,21 @@ try:
                 App.Console.PrintMessage(
                     f"AI Workbench: Contents of {addon_dir}: {contents}\n"
                 )
+                # Also try to list icons directory contents
+                icons_dir = os.path.join(addon_dir, "resources", "icons")
+                if os.path.exists(icons_dir):
+                    icons_contents = os.listdir(icons_dir)
+                    App.Console.PrintMessage(
+                        f"AI Workbench: Icons directory contents: {icons_contents}\n"
+                    )
             except OSError as e:
                 App.Console.PrintError(
                     f"AI Workbench: Could not list directory {addon_dir}: {e}\n"
                 )
 except (OSError, AttributeError, NameError) as e:
     App.Console.PrintError(f"AI Workbench: Icon setup error: {e}\n")
+    # Ensure WORKBENCH_ICON is still defined even if there's an error
+    WORKBENCH_ICON = ""
 
 
 class AIWorkbench(Gui.Workbench):
