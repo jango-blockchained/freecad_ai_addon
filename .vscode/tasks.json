@@ -10,6 +10,16 @@
 				"$python"
 			],
 			"isBackground": false
+		},
+		{
+			"label": "Run All Tests (py3)",
+			"type": "shell",
+			"command": "python3 -m pytest -v --tb=short",
+			"isBackground": false,
+			"problemMatcher": [
+				"$pytest - v -- tb=short"
+			],
+			"group": "test"
 		}
 	]
 }
