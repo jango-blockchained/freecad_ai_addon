@@ -10,6 +10,9 @@ import FreeCADGui as Gui
 import sys
 import os
 
+# Initialize WORKBENCH_ICON at module level to ensure it's always defined
+WORKBENCH_ICON = ""
+
 
 def get_addon_dir():
     """
@@ -78,9 +81,6 @@ addon_dir = get_addon_dir()
 if addon_dir and addon_dir not in sys.path:
     sys.path.insert(0, addon_dir)
 
-# Initialize WORKBENCH_ICON to ensure it's always defined before any class definition
-WORKBENCH_ICON = ""
-
 # Try to set up the icon path before defining the workbench class
 try:
     App.Console.PrintMessage(
@@ -120,8 +120,6 @@ try:
                 )
 except (OSError, AttributeError, NameError) as e:
     App.Console.PrintError(f"AI Workbench: Icon setup error: {e}\n")
-    # Ensure WORKBENCH_ICON is still defined even if there's an error
-    WORKBENCH_ICON = ""
 
 
 class AIWorkbench(Gui.Workbench):
@@ -129,10 +127,11 @@ class AIWorkbench(Gui.Workbench):
 
     MenuText = "AI Assistant"
     ToolTip = "AI-powered design assistant with conversation and agent tools"
-    Icon = WORKBENCH_ICON  # Set icon as class variable during definition
 
     def __init__(self):
         """Initialize the AI workbench."""
+        # Set icon in __init__ to avoid module-level scoping issues
+        self.Icon = WORKBENCH_ICON
         App.Console.PrintMessage("AI Workbench: Instance created\n")
 
     def Initialize(self):
