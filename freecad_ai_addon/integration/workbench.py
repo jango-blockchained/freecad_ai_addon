@@ -1,16 +1,80 @@
 import os
-import FreeCADGui as Gui
 import FreeCAD as App
 from ..utils.logging import get_logger
 
 logger = get_logger("workbench")
 
+# Handle GUI import gracefully
+try:
+    import FreeCADGui as Gui
 
-class AIWorkbench(Gui.Workbench):
+    # Check if Workbench is available (it's not in headless mode)
+    if hasattr(Gui, "Workbench"):
+        BaseWorkbench = Gui.Workbench
+    else:
+        # FreeCAD is running in headless mode, create a dummy base class
+
+        class _DummyWorkbench(object):
+            """Fallback base to allow class definition when FreeCAD GUI is not fully available"""
+
+            def __init__(self):
+                pass
+
+        BaseWorkbench = _DummyWorkbench
+        Gui = None  # Disable GUI features
+except ImportError:
+    Gui = None  # GUI may not be available during early metadata/icon probing
+
+    class _DummyWorkbench(object):
+        """Fallback base to allow class definition before FreeCAD GUI loads"""
+
+        def __init__(self):
+            pass
+
+    BaseWorkbench = _DummyWorkbench
+
+
+def _compute_icon_path():
+    """Compute absolute path to the workbench icon as robustly as possible."""
+    try:
+        # Start from this file and ascend to addon root (…/freecad_ai_addon/..)
+        # integration/workbench.py -> integration -> freecad_ai_addon -> repo/addon root
+        root_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        )
+    except Exception:
+        root_dir = os.getcwd()
+
+    candidates = [
+        os.path.join(root_dir, "resources", "icons", "freecad_ai_addon.svg"),
+    ]
+
+    # Also try resolving via FreeCAD's user Mod folder if needed
+    try:
+        user_mod = os.path.join(App.getUserAppDataDir(), "Mod", "freecad_ai_addon")
+        candidates.append(
+            os.path.join(user_mod, "resources", "icons", "freecad_ai_addon.svg")
+        )
+    except Exception:
+        pass
+
+    for p in candidates:
+        if p and os.path.exists(p):
+            return os.path.realpath(p)
+    return ""
+
+
+# Compute once at import time so Addon Manager can read class attribute
+_ICON_PATH = _compute_icon_path()
+
+
+class AIWorkbench(BaseWorkbench):
     """AI Workbench class for FreeCAD"""
 
     MenuText = "AI Assistant"
     ToolTip = "AI-powered design assistant with conversation and agent capabilities"
+    # Provide class-level Icon so Addon Manager can discover it without instantiation
+    Icon = _ICON_PATH or ""
 
     def __init__(self):
         """Initialize the AI Workbench"""
@@ -22,14 +86,23 @@ class AIWorkbench(Gui.Workbench):
     def _set_icon_path(self):
         """Set the workbench icon path"""
         try:
-            # Get the addon directory
-            addon_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            icon_path = os.path.join(
-                addon_dir, "resources", "icons", "freecad_ai_addon.svg"
-            )
+            # Prefer the precomputed path; fall back to runtime computation
+            icon_path = _ICON_PATH
+            if not icon_path:
+                addon_dir = os.path.dirname(
+                    os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+                )
+                icon_path = os.path.join(
+                    addon_dir, "resources", "icons", "freecad_ai_addon.svg"
+                )
 
-            if os.path.exists(icon_path):
+            if icon_path and os.path.exists(icon_path):
                 self.Icon = icon_path
+                # Keep class attribute in sync too
+                try:
+                    type(self).Icon = icon_path
+                except Exception:
+                    pass
                 logger.info(f"Workbench icon set to: {icon_path}")
             else:
                 logger.warning(f"Icon file not found at: {icon_path}")
@@ -116,8 +189,8 @@ class AIWorkbench(Gui.Workbench):
         pass
 
     def GetClassName(self):
-        """Return the class name"""
-        return "AIWorkbench"
+        """Return the FreeCAD class identifier expected for Python workbenches."""
+        return "Gui::PythonWorkbench"
 
 
 # Register commands that will be available in the workbench

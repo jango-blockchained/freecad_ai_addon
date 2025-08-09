@@ -16,7 +16,7 @@ except ImportError:
     Part = None
     Draft = None
 
-from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus
+from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
 from .action_library import ActionLibrary
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,12 @@ class GeometryAgent(BaseAgent):
         self.description = (
             "Specialized agent for 3D geometric operations and part design"
         )
+
+        # This agent handles geometry creation and modification tasks
+        self.capabilities = [
+            TaskType.GEOMETRY_CREATION,
+            TaskType.GEOMETRY_MODIFICATION,
+        ]
 
         # Initialize action library
         self.action_library = ActionLibrary()

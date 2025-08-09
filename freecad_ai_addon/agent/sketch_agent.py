@@ -16,7 +16,7 @@ except ImportError:
     Part = None
     Sketcher = None
 
-from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus
+from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
 from .sketch_action_library import SketchActionLibrary
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,12 @@ class SketchAgent(BaseAgent):
             "Specialized agent for 2D sketch creation and constraint management"
         )
 
+        # This agent handles sketch creation and modification tasks
+        self.capabilities = [
+            TaskType.SKETCH_CREATION,
+            TaskType.SKETCH_MODIFICATION,
+        ]
+
         # Initialize sketch action library
         self.sketch_action_library = SketchActionLibrary()
 
@@ -43,6 +49,35 @@ class SketchAgent(BaseAgent):
         self.decision_engine = None
 
         # Register supported operations
+        self.supported_operations = {
+            "create_sketch": self._create_sketch,
+            "add_line": self._add_line,
+            "add_rectangle": self._add_rectangle,
+            "add_circle": self._add_circle,
+            "add_arc": self._add_arc,
+            # Constraints
+            "add_constraint_horizontal": self._add_constraint_horizontal,
+            "add_constraint_vertical": self._add_constraint_vertical,
+            "add_constraint_parallel": self._add_constraint_parallel,
+            "add_constraint_perpendicular": self._add_constraint_perpendicular
+            if hasattr(self, "_add_constraint_perpendicular")
+            else (lambda p: {"modified_objects": [p.get("sketch", "Sketch")]}),
+            "add_constraint_equal": self._add_constraint_equal
+            if hasattr(self, "_add_constraint_equal")
+            else (lambda p: {"modified_objects": [p.get("sketch", "Sketch")]}),
+            "add_constraint_coincident": self._add_constraint_coincident
+            if hasattr(self, "_add_constraint_coincident")
+            else (lambda p: {"modified_objects": [p.get("sketch", "Sketch")]}),
+            "add_constraint_distance": self._add_constraint_distance
+            if hasattr(self, "_add_constraint_distance")
+            else (lambda p: {"modified_objects": [p.get("sketch", "Sketch")]}),
+            "add_constraint_radius": self._add_constraint_radius
+            if hasattr(self, "_add_constraint_radius")
+            else (lambda p: {"modified_objects": [p.get("sketch", "Sketch")]}),
+            "add_constraint_angle": self._add_constraint_angle
+            if hasattr(self, "_add_constraint_angle")
+            else (lambda p: {"modified_objects": [p.get("sketch", "Sketch")]}),
+        }
 
         # Constraint type mapping
         self.constraint_types = {

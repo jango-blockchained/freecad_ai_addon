@@ -336,22 +336,36 @@ class AIAgentFramework:
                 "objects": [obj.Name for obj in doc.Objects[:10]],  # Limit to first 10
             }
 
-            # Selected objects
-            if Gui:
-                selection = Gui.Selection.getSelection()
-                context["selected_objects"] = [obj.Name for obj in selection]
+            # Only access GUI APIs if GUI is actually up
+            try:
+                gui_up = bool(getattr(App, "GuiUp", False))
+            except Exception:
+                gui_up = False
 
-                # Selected sub-elements
-                selection_ex = Gui.Selection.getSelectionEx()
-                if selection_ex:
-                    context["selected_sub_elements"] = [
-                        {"object": sel.Object.Name, "sub_names": sel.SubElementNames}
-                        for sel in selection_ex
-                    ]
+            if Gui and gui_up:
+                try:
+                    if hasattr(Gui, "Selection"):
+                        selection = Gui.Selection.getSelection()
+                        context["selected_objects"] = [obj.Name for obj in selection]
 
-            # Current workbench
-            if Gui:
-                context["active_workbench"] = Gui.activeWorkbench().name()
+                        selection_ex = Gui.Selection.getSelectionEx()
+                        if selection_ex:
+                            context["selected_sub_elements"] = [
+                                {
+                                    "object": sel.Object.Name,
+                                    "sub_names": sel.SubElementNames,
+                                }
+                                for sel in selection_ex
+                            ]
+                except Exception:
+                    # Ignore selection issues in headless contexts
+                    context.setdefault("selected_objects", [])
+
+                try:
+                    if hasattr(Gui, "activeWorkbench") and Gui.activeWorkbench():
+                        context["active_workbench"] = Gui.activeWorkbench().name()
+                except Exception:
+                    pass
         else:
             context["document"] = None
             context["selected_objects"] = []

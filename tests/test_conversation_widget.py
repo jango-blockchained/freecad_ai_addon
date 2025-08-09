@@ -5,6 +5,9 @@ Basic test to ensure the conversation widget components work correctly.
 """
 
 import sys
+import pytest
+
+pytest.importorskip("PySide6")
 from PySide6.QtWidgets import QApplication, QMainWindow
 from freecad_ai_addon.ui.conversation_widget import ConversationWidget
 

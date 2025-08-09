@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # This script updates the installed version of the addon with the latest changes
 # from the Git repository
 
@@ -26,6 +28,18 @@ echo "Updating installed addon with latest changes from Git repository..."
 echo "Source: ${REPO_DIR}"
 echo "Target: ${INSTALLED_DIR}"
 
+# Always remove Python caches from both source and installed locations
+echo "Cleaning Python caches (\\_\\_pycache\\_\\_ and .pyc) in source and installed directories..."
+for DIR in "${REPO_DIR}" "${INSTALLED_DIR}"; do
+  if [ -d "${DIR}" ]; then
+    echo " - Cleaning ${DIR}"
+    # Remove all __pycache__ directories
+    find "${DIR}" -type d -name "__pycache__" -print -exec rm -rf {} + || true
+    # Remove stray .pyc/.pyo files
+    find "${DIR}" -type f \( -name "*.pyc" -o -name "*.pyo" \) -print -delete || true
+  fi
+done
+
 # Copy the critical files
 cp -v "${REPO_DIR}/InitGui.py" "${INSTALLED_DIR}/"
 cp -v "${REPO_DIR}/Init.py" "${INSTALLED_DIR}/"
@@ -44,3 +58,4 @@ fi
 
 echo "Update complete!"
 echo "Please restart FreeCAD for the changes to take effect."
+

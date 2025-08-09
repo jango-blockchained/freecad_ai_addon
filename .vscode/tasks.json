@@ -20,6 +20,23 @@
 				"$pytest - v -- tb=short"
 			],
 			"group": "test"
+		},
+		{
+			"label": "Use venv and run tests",
+			"type": "shell",
+			"command": "source ./venv/bin/activate && python -m pytest -v --tb=short",
+			"isBackground": false,
+			"problemMatcher": [
+				"$pytest - v -- tb=short"
+			],
+			"group": "test"
+		},
+		{
+			"label": "Create venv and install deps",
+			"type": "shell",
+			"command": "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && pip install pytest pytest-asyncio httpx pydantic",
+			"isBackground": false,
+			"group": "test"
 		}
 	]
 }

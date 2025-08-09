@@ -3,9 +3,14 @@
 Test Agent Integration
 
 Test script to validate the agent conversation integration without FreeCAD.
+Skips automatically when PySide6 isn't available (headless CI or minimal envs).
 """
 
 import sys
+import pytest
+
+# Skip collection if PySide6 isn't available
+pytest.importorskip("PySide6")
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from freecad_ai_addon.ui.enhanced_conversation_widget import EnhancedConversationWidget

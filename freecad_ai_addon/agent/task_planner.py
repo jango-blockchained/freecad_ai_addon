@@ -52,7 +52,7 @@ class ExecutionPlan:
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
 
-    def add_task(self, task: AgentTask, dependencies: List[str] = None):
+    def add_task(self, task: AgentTask, dependencies: Optional[List[str]] = None):
         """Add task to execution plan"""
         self.tasks.append(task)
         if dependencies:
@@ -90,7 +90,7 @@ class TaskPlanner:
         self.logger.info(f"Registered agent: {agent.name}")
 
     def parse_natural_language_request(
-        self, request: str, context: Dict[str, Any] = None
+        self, request: str, context: Optional[Dict[str, Any]] = None
     ) -> ExecutionPlan:
         """
         Parse natural language request into execution plan.
@@ -144,18 +144,23 @@ class TaskPlanner:
         plan.status = PlanStatus.RUNNING
         plan.started_at = datetime.now()
 
-        completed_task_ids = []
-        task_results = {}
-        failed_tasks = []
+        completed_task_ids: set[str] = set()
+        failed_tasks: set[str] = set()
+        processed_task_ids: set[str] = set()  # completed or failed
+        task_results: Dict[str, TaskResult] = {}
 
         try:
-            while len(completed_task_ids) < len(plan.tasks):
-                # Get tasks ready for execution
-                ready_tasks = plan.get_ready_tasks(completed_task_ids)
+            while len(processed_task_ids) < len(plan.tasks):
+                # Get tasks ready for execution, excluding already processed/failed ones
+                ready_tasks = [
+                    t
+                    for t in plan.get_ready_tasks(list(completed_task_ids))
+                    if t.id not in failed_tasks and t.id not in processed_task_ids
+                ]
 
                 if not ready_tasks:
                     if failed_tasks:
-                        # No more tasks can be executed due to failures
+                        # No more tasks can be executed due to failures or blocked deps
                         break
                     else:
                         # Circular dependency or other issue
@@ -168,12 +173,13 @@ class TaskPlanner:
                     try:
                         result = self._execute_single_task(task)
                         task_results[task.id] = result
+                        processed_task_ids.add(task.id)
 
                         if result.status == TaskStatus.COMPLETED:
-                            completed_task_ids.append(task.id)
+                            completed_task_ids.add(task.id)
                             self.logger.info(f"Task {task.id} completed successfully")
                         else:
-                            failed_tasks.append(task.id)
+                            failed_tasks.add(task.id)
                             self.logger.error(
                                 f"Task {task.id} failed: {result.error_message}"
                             )
@@ -187,12 +193,13 @@ class TaskPlanner:
                         task_results[task.id] = TaskResult(
                             status=TaskStatus.FAILED, error_message=str(e)
                         )
-                        failed_tasks.append(task.id)
+                        failed_tasks.add(task.id)
+                        processed_task_ids.add(task.id)
 
             # Determine overall plan status
             if failed_tasks and len(completed_task_ids) < len(plan.tasks):
                 plan.status = PlanStatus.FAILED
-                plan.error_message = f"Failed tasks: {failed_tasks}"
+                plan.error_message = f"Failed tasks: {sorted(failed_tasks)}"
             else:
                 plan.status = PlanStatus.COMPLETED
 
@@ -212,7 +219,7 @@ class TaskPlanner:
         return task_results
 
     def execute_autonomous_task(
-        self, description: str, context: Dict[str, Any] = None
+        self, description: str, context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, TaskResult]:
         """
         Execute a task autonomously from description.
@@ -266,7 +273,7 @@ class TaskPlanner:
         return agent.execute_with_safety(task)
 
     def _analyze_request(
-        self, request: str, context: Dict[str, Any] = None
+        self, request: str, context: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
         """
         Analyze natural language request to extract operations.
@@ -327,7 +334,7 @@ class TaskPlanner:
         return operations
 
     def _parse_create_box_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse box creation request"""
         # Extract dimensions using simple pattern matching
@@ -376,7 +383,7 @@ class TaskPlanner:
         ]
 
     def _parse_create_cylinder_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse cylinder creation request"""
         import re
@@ -403,7 +410,7 @@ class TaskPlanner:
         ]
 
     def _parse_create_sphere_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse sphere creation request"""
         import re
@@ -427,7 +434,7 @@ class TaskPlanner:
         ]
 
     def _parse_fillet_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse fillet request"""
         import re
@@ -454,7 +461,7 @@ class TaskPlanner:
         ]
 
     def _parse_chamfer_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse chamfer request"""
         import re
@@ -481,7 +488,7 @@ class TaskPlanner:
         ]
 
     def _parse_sketch_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse sketch creation request"""
         operations = []
@@ -522,7 +529,7 @@ class TaskPlanner:
         return operations
 
     def _parse_analysis_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse analysis request"""
         selected_object = self._get_selected_object(context)
@@ -550,7 +557,7 @@ class TaskPlanner:
         ]
 
     def _parse_boolean_request(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Parse boolean operation request"""
         selected_objects = self._get_selected_objects(context)
@@ -578,7 +585,7 @@ class TaskPlanner:
         ]
 
     def _match_templates(
-        self, request: str, context: Dict[str, Any]
+        self, request: str, context: Optional[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Match request against predefined templates"""
         # This would contain more sophisticated template matching
@@ -600,7 +607,7 @@ class TaskPlanner:
 
         return default
 
-    def _get_selected_object(self, context: Dict[str, Any]) -> str:
+    def _get_selected_object(self, context: Optional[Dict[str, Any]]) -> str:
         """Get selected object from context"""
         if context and "selected_objects" in context:
             selected = context["selected_objects"]
@@ -608,7 +615,7 @@ class TaskPlanner:
                 return selected[0]
         return "Object"  # Default name
 
-    def _get_selected_objects(self, context: Dict[str, Any]) -> List[str]:
+    def _get_selected_objects(self, context: Optional[Dict[str, Any]]) -> List[str]:
         """Get all selected objects from context"""
         if context and "selected_objects" in context:
             return context["selected_objects"]
