@@ -1,8 +1,12 @@
 """
-FreeCAD AI Addon - GUI Initialization Module
+FreeCAD AI Addon - GUI Initialization (InitGui.py)
 
-This module handles the initialization of the AI Workbench and related GUI
-components when FreeCAD starts with a GUI interface.
+Best-practice implementation of a Python workbench:
+- Keep the workbench class in InitGui.py (GUI-only entrypoint)
+- Set MenuText, ToolTip, and Icon as class attrs for Addon Manager
+- Compute icon path dynamically relative to this file with robust fallbacks
+- Keep Initialize lightweight; register toolbars/menus on demand
+- Support headless mode by guarding FreeCADGui imports
 """
 
 import os
@@ -101,9 +105,12 @@ def get_addon_dir():
             if os.path.exists(addon_path):
                 # Resolve symlinks to get the real path
                 real_path = os.path.realpath(addon_path)
-                App.Console.PrintMessage(
-                    f"AI Workbench: Found addon at {addon_path}, real path: {real_path}\n"
-                )
+                try:
+                    App.Console.PrintMessage(
+                        f"AI Workbench: Found addon at {addon_path}, real path: {real_path}\n"
+                    )
+                except Exception:
+                    pass
                 return real_path
         except (AttributeError, NameError):
             pass
@@ -129,19 +136,28 @@ def get_addon_dir():
             if os.path.exists(path):
                 # Resolve symlinks to get the real path
                 real_path = os.path.realpath(path)
-                App.Console.PrintMessage(
-                    f"AI Workbench: Checking {path} -> {real_path}\n"
-                )
-                if os.path.exists(os.path.join(real_path, "package.xml")):
+                try:
                     App.Console.PrintMessage(
-                        f"AI Workbench: Found package.xml in {real_path}\n"
+                        f"AI Workbench: Checking {path} -> {real_path}\n"
                     )
+                except Exception:
+                    pass
+                if os.path.exists(os.path.join(real_path, "package.xml")):
+                    try:
+                        App.Console.PrintMessage(
+                            f"AI Workbench: Found package.xml in {real_path}\n"
+                        )
+                    except Exception:
+                        pass
                     return real_path
 
         # Final fallback - use current working directory
-        App.Console.PrintMessage(
-            "AI Workbench: Using current working directory as fallback\n"
-        )
+        try:
+            App.Console.PrintMessage(
+                "AI Workbench: Using current working directory as fallback\n"
+            )
+        except Exception:
+            pass
     return os.getcwd()
 
 
@@ -150,217 +166,198 @@ addon_dir = get_addon_dir()
 if addon_dir and addon_dir not in sys.path:
     sys.path.insert(0, addon_dir)
 
-
-# Import the full-featured workbench from the integration module
+# Inform about initialization progress (mirroring example style)
 try:
-    from freecad_ai_addon.integration.workbench import (
-        AIWorkbench as IntegratedAIWorkbench,
-    )
+    App.Console.PrintMessage("FreeCAD AI Addon: Starting initialization...\n")
+    App.Console.PrintMessage(f"FreeCAD AI Addon: Addon directory: {addon_dir}\n")
+except Exception:
+    # In non-FreeCAD environments, skip noisy output
+    pass
 
-    # Use the integrated workbench with full functionality
-    AIWorkbench = IntegratedAIWorkbench
-    safe_print("AI Workbench: Using integrated workbench with full functionality")
-    # Ensure class-level Icon is present for Addon Manager handle acquisition
+
+def _compute_icon_path() -> str:
+    """Compute absolute path to the workbench icon robustly.
+
+    Best practice: external SVG referenced via dynamic path.
+    """
     try:
-        if not getattr(AIWorkbench, "Icon", ""):
-            # Compute a conservative default icon path relative to this file
-            base_dir = os.path.dirname(os.path.realpath(__file__))
-            candidate = os.path.join(
-                base_dir, "resources", "icons", "freecad_ai_addon.svg"
-            )
-            if os.path.exists(candidate):
-                AIWorkbench.Icon = candidate
+        base = get_addon_dir()
+    except Exception:
+        base = os.getcwd()
+
+    candidates = [
+        os.path.join(base, "resources", "icons", "freecad_ai_addon.svg"),
+    ]
+
+    # Also try user Mod folder resolution if needed
+    try:
+        user_mod = os.path.join(App.getUserAppDataDir(), "Mod", "freecad_ai_addon")
+        candidates.append(
+            os.path.join(user_mod, "resources", "icons", "freecad_ai_addon.svg")
+        )
     except Exception:
         pass
-except ImportError as e:
-    safe_print(
-        f"AI Workbench: Could not import integrated workbench ({e}), using fallback"
-    )
 
-    # Fallback to basic workbench if integration fails
-    class AIWorkbench(BaseWorkbench):
-        """AI Workbench class for FreeCAD (fallback)"""
+    for p in candidates:
+        if p and os.path.exists(p):
+            return os.path.realpath(p)
+    return ""
 
-        # Basic workbench metadata
-        MenuText = "AI Assistant"
-        ToolTip = "AI-powered design assistant with conversation and agent tools"
 
-        # Set class-level icon - defer to __init__ to avoid NameError during class definition
-        Icon = ""
+# Precompute icon path once at import time for use in class attribute
+_ICON_PATH = _compute_icon_path()
 
-        def __init__(self):
-            """Initialize the AI workbench."""
 
-            # Local safe printer that doesn't depend on a global symbol existing yet
-            def _sp(msg: str):
-                # Try module-level safe_print if available
-                try:
-                    _gp = globals().get("safe_print")
-                    if callable(_gp):
-                        _gp(msg)
-                        return
-                except (NameError, AttributeError):
-                    # Fall through to basic printing
-                    pass
-                # Fallbacks
-                if "App" in globals() and hasattr(App, "Console"):
-                    try:
-                        App.Console.PrintMessage(f"{msg}\n")
-                        return
-                    except (AttributeError, TypeError):
-                        # Fall back to print
-                        pass
-                print(msg)
+class AIWorkbench(BaseWorkbench):
+    """AI Workbench class for FreeCAD (defined in InitGui.py per best-practice)."""
 
-            # Compute icon path without relying on a global helper during early import
+    # Metadata for Addon Manager / Workbench selector
+    MenuText = "AI Assistant"
+    ToolTip = "AI-powered design assistant with conversation and agent tools"
+    # Provide class-level icon for Addon Manager discovery
+    # Use dynamically computed path instead of hardcoded one
+    Icon = _ICON_PATH
+
+    def __init__(self):
+        # Use dynamically computed icon path
+        icon_path = _ICON_PATH
+        if icon_path and os.path.exists(icon_path):
             try:
-                base_dir = None
-                try:
-                    base_dir = os.path.dirname(os.path.realpath(__file__))
-                except NameError:
-                    # When __file__ is not available in FreeCAD context, use App data dir
-                    try:
-                        user_data_dir = App.getUserAppDataDir()
-                        candidate = os.path.join(
-                            user_data_dir, "Mod", "freecad_ai_addon"
-                        )
-                        if os.path.exists(candidate):
-                            base_dir = os.path.realpath(candidate)
-                    except (AttributeError, NameError, TypeError):
-                        base_dir = None
+                self.Icon = icon_path
+                type(self).Icon = icon_path  # keep class attr synced
+            except Exception:
+                self.Icon = icon_path
+        safe_print("AI Workbench: Instance created")
 
-                if not base_dir:
-                    # Final fallback: try common locations
-                    for p in [
-                        os.path.join(
-                            os.path.expanduser("~"),
-                            ".local",
-                            "share",
-                            "FreeCAD",
-                            "Mod",
-                            "freecad_ai_addon",
-                        ),
-                        os.path.join(
-                            "/usr", "share", "freecad", "Mod", "freecad_ai_addon"
-                        ),
-                        os.path.join(
-                            os.path.expanduser("~"),
-                            ".FreeCAD",
-                            "Mod",
-                            "freecad_ai_addon",
-                        ),
-                    ]:
-                        if os.path.exists(p):
-                            base_dir = os.path.realpath(p)
-                            break
-
-                # Build icon path and set both instance and class attributes
-                icon_path = os.path.join(
-                    base_dir or os.getcwd(),
-                    "resources",
-                    "icons",
-                    "freecad_ai_addon.svg",
-                )
-                if os.path.exists(icon_path):
-                    self.Icon = icon_path
-                    AIWorkbench.Icon = icon_path
-                    _sp(f"AI Workbench: Icon set to {icon_path}")
-                else:
-                    _sp(f"AI Workbench: Icon not found at {icon_path}")
-            except (OSError, RuntimeError, ValueError, TypeError) as icon_error:
+    def Initialize(self):
+        """Initialize workbench GUI elements (keep minimal)."""
+        try:
+            safe_print("AI Workbench initializing…")
+            # Register/append minimal UI only if GUI is available
+            if Gui is not None and hasattr(self, "appendToolbar"):
+                # Register commands lazily to avoid heavy imports at startup
                 try:
-                    App.Console.PrintError(
-                        f"AI Workbench: Icon setup error: {icon_error}\n"
+                    from freecad_ai_addon.integration.commands import (
+                        OpenChatCommand,
                     )
-                except (AttributeError, NameError):
-                    # As a last resort, write to stdout
-                    print(f"AI Workbench: Icon setup error: {icon_error}")
-            _sp("AI Workbench: Instance created")
 
-        def Initialize(self):
-            """Initialize workbench GUI elements"""
-            try:
-                safe_print("AI Workbench initializing...")
-                # Only try to create menus if we have GUI capabilities
-                if hasattr(self, "appendMenu"):
+                    # Also import manufacturing command so it registers itself (side-effect import)
+                    from freecad_ai_addon.commands import (
+                        manufacturing_commands as _mfg_cmds,
+                    )  # noqa: F401
+
+                    if hasattr(Gui, "addCommand"):
+                        Gui.addCommand("AI_OpenChat", OpenChatCommand())
+                    self.appendToolbar(
+                        "AI Assistant",
+                        ["AI_OpenChat", "AI_ShowManufacturingAdvice"],
+                    )
+                    self.appendMenu(
+                        "AI Assistant",
+                        ["AI_OpenChat", "AI_ShowManufacturingAdvice"],
+                    )
+                except Exception:
+                    # Fall back to an empty menu/toolbar if commands unavailable
                     self.appendMenu("AI Assistant", [])
-                    safe_print("AI Workbench initialized successfully (fallback mode)")
-                else:
-                    safe_print(
-                        "AI Workbench initialized successfully (console mode - no GUI)"
-                    )
-            except (ImportError, AttributeError) as init_error:
-                try:
-                    App.Console.PrintError(
-                        f"AI Workbench initialization failed: {init_error}\n"
-                    )
-                except (AttributeError, NameError, TypeError):
-                    pass
+            else:
+                safe_print("AI Workbench initialized (console/headless mode)")
+        except Exception as init_error:
+            try:
+                App.Console.PrintError(
+                    f"AI Workbench initialization failed: {init_error}\n"
+                )
+            except Exception:
+                pass
 
-        def Activated(self):
-            """Called when workbench is activated"""
-            safe_print("AI Assistant workbench activated (fallback mode)")
+    def Activated(self):
+        safe_print("AI Assistant workbench activated")
 
-        def Deactivated(self):
-            """Called when workbench is deactivated"""
-            safe_print("AI Assistant workbench deactivated (fallback mode)")
+    def Deactivated(self):
+        safe_print("AI Assistant workbench deactivated")
 
-        def GetClassName(self):
-            """Return the class name for FreeCAD workbench registration"""
-            return "Gui::PythonWorkbench"
+    def GetClassName(self):
+        return "Gui::PythonWorkbench"
 
 
-# Explicitly export AIWorkbench so addon manager can find it
 __all__ = ["AIWorkbench"]
 
-# Register the workbench once GUI is available, without relying on module-level Initialize
+# Addon metadata (optional)
+__version__ = "0.7.11"
+__title__ = "FreeCAD AI"
+__author__ = "jango-blockchained"
+__url__ = "https://github.com/jango-blockchained/mcp-freecad"
+
+# Register the workbench with robust error handling (like the example)
 try:
-    cls = globals().get("AIWorkbench")
-    if Gui is not None and hasattr(Gui, "addWorkbench") and cls is not None:
-        Gui.addWorkbench(cls())
-        # Log registration without hard dependency on safe_print symbol
+    if Gui is not None and hasattr(Gui, "addWorkbench") and "AIWorkbench" in globals():
+        # Try to list existing workbenches (optional)
         try:
-            _gp = globals().get("safe_print")
-            if callable(_gp):
-                _gp("AI Workbench: Registered workbench with FreeCAD")
-            else:
-                raise NameError("safe_print unavailable")
-        except (NameError, AttributeError, TypeError):
-            if hasattr(App, "Console"):
-                try:
-                    App.Console.PrintMessage(
-                        "AI Workbench: Registered workbench with FreeCAD\n"
-                    )
-                except (AttributeError, TypeError):
-                    print("AI Workbench: Registered workbench with FreeCAD")
-            else:
-                print("AI Workbench: Registered workbench with FreeCAD")
-    elif Gui is not None and hasattr(Gui, "addWorkbench") and cls is None:
-        # Class not available yet; skip registration but keep import successful
-        try:
-            _gp = globals().get("safe_print")
-            if callable(_gp):
-                _gp(
-                    "AI Workbench: AIWorkbench class not available at import time; skipping registration"
+            if hasattr(Gui, "listWorkbenches"):
+                existing = list(Gui.listWorkbenches().keys())
+                App.Console.PrintMessage(
+                    f"FreeCAD AI Addon: Existing workbenches: {existing}\n"
                 )
-            else:
-                raise NameError("safe_print unavailable")
-        except (NameError, AttributeError, TypeError):
-            print(
+        except Exception as e:
+            try:
+                App.Console.PrintWarning(
+                    f"FreeCAD AI Addon: Could not list existing workbenches: {e}\n"
+                )
+            except Exception:
+                pass
+
+        # Create workbench instance
+        try:
+            _wb = AIWorkbench()
+            App.Console.PrintMessage(
+                "FreeCAD AI Addon: Workbench instance created successfully\n"
+            )
+        except Exception as e:
+            App.Console.PrintError(
+                f"FreeCAD AI Addon: Failed to create workbench instance: {e}\n"
+            )
+            _wb = None
+
+        # Register if instance available
+        if _wb is not None:
+            try:
+                Gui.addWorkbench(_wb)
+                App.Console.PrintMessage(
+                    "FreeCAD AI Addon: Workbench registered successfully\n"
+                )
+            except KeyError as ke:
+                # Some FreeCAD versions raise KeyError if already exists
+                if "already" in str(ke).lower():
+                    try:
+                        App.Console.PrintWarning(
+                            f"FreeCAD AI Addon: Workbench already registered, skipping: {ke}\n"
+                        )
+                    except Exception:
+                        pass
+                else:
+                    App.Console.PrintError(
+                        f"FreeCAD AI Addon: Workbench registration KeyError: {ke}\n"
+                    )
+            except AttributeError as ae:
+                App.Console.PrintError(
+                    f"FreeCAD AI Addon: FreeCADGui.addWorkbench not available: {ae}\n"
+                )
+            except Exception as e:
+                App.Console.PrintError(
+                    f"FreeCAD AI Addon: Workbench registration failed: {e}\n"
+                )
+    else:
+        # GUI not available or class missing
+        if Gui is None:
+            safe_print("AI Workbench: GUI not available; skipping registration")
+        else:
+            safe_print(
                 "AI Workbench: AIWorkbench class not available at import time; skipping registration"
             )
-    else:
-        try:
-            _gp = globals().get("safe_print")
-            if callable(_gp):
-                _gp("AI Workbench: GUI not available; skipping registration")
-            else:
-                raise NameError("safe_print unavailable")
-        except (NameError, AttributeError, TypeError):
-            print("AI Workbench: GUI not available; skipping registration")
-except (RuntimeError, TypeError, ValueError, OSError) as e:
-    # Don't break import; just log the issue
+except Exception as e:
+    # Do not break addon import
     try:
-        App.Console.PrintError(f"AI Workbench: Registration failed: {e}\n")
-    except (AttributeError, NameError):
-        print(f"AI Workbench: Registration failed: {e}")
+        App.Console.PrintError(
+            f"FreeCAD AI Addon: Initialization error during registration: {e}\n"
+        )
+    except Exception:
+        pass

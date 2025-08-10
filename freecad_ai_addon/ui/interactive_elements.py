@@ -545,9 +545,43 @@ class InteractiveCodeBlock(QFrame):
         self.status_label.setText("Code copied to clipboard")
 
     def _explain_code(self):
-        """Request code explanation (placeholder for AI integration)"""
-        self.status_label.setText("Code explanation requested...")
-        # TODO: Integrate with AI provider for code explanation
+        """Request code explanation from AI provider"""
+        self.status_label.setText("Requesting code explanation...")
+
+        try:
+            # Get the current code
+            code = self._get_parameterized_code()
+
+            # Try to get an AI provider to explain the code
+            from freecad_ai_addon.core.provider_manager import ProviderManager
+
+            provider_manager = ProviderManager()
+            if provider_manager.has_active_provider():
+                # Create explanation request
+                explanation_prompt = (
+                    f"Please explain this FreeCAD Python code:\n\n```python\n{code}\n```\n\n"
+                    "Explain what this code does, what objects it creates, and any important parameters."
+                )
+
+                # For now, show the prompt in a dialog since we need the full chat infrastructure
+                # to properly handle AI responses
+                from PySide6.QtWidgets import QMessageBox
+
+                msg = QMessageBox()
+                msg.setWindowTitle("Code Explanation Request")
+                msg.setText("Code explanation request created.")
+                msg.setDetailedText(f"Request prompt:\n{explanation_prompt}")
+                msg.setInformativeText(
+                    "To get the explanation, please copy the detailed text and "
+                    "paste it into the AI chat interface."
+                )
+                msg.exec()
+                self.status_label.setText("Explanation request prepared")
+            else:
+                self.status_label.setText("No AI provider configured")
+
+        except Exception as e:
+            self.status_label.setText(f"Failed to request explanation: {str(e)}")
 
     def _on_preview_finished(self, result: ExecutionResult):
         """Handle preview execution completion"""

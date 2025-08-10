@@ -462,9 +462,13 @@ Create a comprehensive FreeCAD addon that integrates AI capabilities through Mod
 - [ ] Add design optimization suggestions
   - **Example**: "This design could be 15% lighter with topology optimization"
   - **Suggestions**: Material removal areas, stress concentration reduction
-- [ ] Create material and manufacturing advice
-  - **Example**: "For 3D printing: Add 45° chamfers, increase wall thickness to 2mm"
-  - **Database**: Manufacturing guidelines for different processes
+- [x] Create material and manufacturing advice
+  - **Implementation**: ManufacturingAdvisor with material selection, process recommendations, cost estimation, DFM guidance, risk and timeline assessment
+  - **Database**: Expanded materials (Al 6061, 5052; Steel 1018; SS316; ABS; Nylon PA12; PLA) and processes (machining, injection molding, additive, sheet metal, casting)
+  - **Integration**: Optional Design Rule Checker recommendations merged into DFM tips
+  - **Serialization**: advice_to_dict for conversation/JSON export
+  - **UI**: ManufacturingAdviceDialog and command "AI_ShowManufacturingAdvice" in AI Assistant menu/toolbar
+  - **Tests**: Unit tests validating mock mode and process cost estimation
 - [ ] Implement design rule checking
   - **Example**: Automated DFM (Design for Manufacturing) validation
   - **Rules**: Minimum wall thickness, draft angles, undercuts
@@ -599,7 +603,8 @@ Create a comprehensive FreeCAD addon that integrates AI capabilities through Mod
 - [ ] Create parametric design assistant
 - [ ] Implement feature recognition AI
 - [ ] Add design optimization suggestions
-- [ ] Create material and manufacturing advice
+- [x] Create material and manufacturing advice
+  - Implementation: ManufacturingAdvisor (materials, processes, cost, DFM, risk, timeline), advice_to_dict, UI dialog + command AI_ShowManufacturingAdvice, optional DRC integration, unit tests added
 - [ ] Implement design rule checking
 - [ ] Add simulation setup assistance
 

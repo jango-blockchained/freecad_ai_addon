@@ -2,8 +2,11 @@
 FreeCAD Commands for AI Workbench
 
 This module contains all FreeCAD command classes for the AI workbench.
+Icons are referenced via robust, absolute paths computed at runtime,
+per best practices for FreeCAD addons.
 """
 
+import os
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide6 import QtCore, QtWidgets
@@ -13,13 +16,41 @@ from ..utils.logging import get_logger
 logger = get_logger("commands")
 
 
+def _addon_root() -> str:
+    """Return the absolute path to the addon root directory.
+
+    commands.py lives at: <addon_root>/freecad_ai_addon/integration/commands.py
+    We need to walk up three levels to reach <addon_root> to access resources/.
+    """
+    try:
+        return os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        )
+    except Exception:
+        # Fallback to user Mod installation
+        try:
+            user_mod = os.path.join(App.getUserAppDataDir(), "Mod", "freecad_ai_addon")
+            return (
+                os.path.realpath(user_mod) if os.path.exists(user_mod) else os.getcwd()
+            )
+        except Exception:
+            return os.getcwd()
+
+
+def _icon_path(name: str) -> str:
+    """Compute absolute path to an icon under resources/icons."""
+    base = _addon_root()
+    candidate = os.path.join(base, "resources", "icons", name)
+    return os.path.realpath(candidate) if os.path.exists(candidate) else name
+
+
 class OpenChatCommand:
     """Command to open the AI chat interface"""
 
     def GetResources(self):
         """Return command resources (icon, tooltip, etc.)"""
         return {
-            "Pixmap": "freecad_ai_addon_chat.svg",
+            "Pixmap": _icon_path("freecad_ai_addon_chat.svg"),
             "MenuText": "Open AI Chat",
             "ToolTip": "Open the AI conversation interface",
             "Accel": "Ctrl+Shift+A",
@@ -68,7 +99,7 @@ class ProviderManagerCommand:
     def GetResources(self):
         """Return command resources"""
         return {
-            "Pixmap": "freecad_ai_addon_settings.svg",
+            "Pixmap": _icon_path("freecad_ai_addon_settings.svg"),
             "MenuText": "AI Provider Settings",
             "ToolTip": "Manage AI provider configurations",
             "Accel": "Ctrl+Shift+P",

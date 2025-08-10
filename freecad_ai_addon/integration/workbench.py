@@ -135,7 +135,7 @@ class AIWorkbench(BaseWorkbench):
             self._register_commands()
 
             # Main AI toolbar
-            self.appendToolbar("AI Assistant", ["AI_OpenChat"])
+            self.appendToolbar("AI Assistant", ["AI_OpenChat", "AI_ProviderManager"])
 
             logger.info("AI toolbars created")
         except Exception as e:
@@ -145,7 +145,7 @@ class AIWorkbench(BaseWorkbench):
         """Create menus for the workbench"""
         try:
             # Main AI menu
-            self.appendMenu("AI Assistant", ["AI_OpenChat"])
+            self.appendMenu("AI Assistant", ["AI_OpenChat", "AI_ProviderManager"])
 
             logger.info("AI menus created")
         except Exception as e:
@@ -154,13 +154,14 @@ class AIWorkbench(BaseWorkbench):
     def _register_commands(self):
         """Register FreeCAD commands for the workbench"""
         try:
-            # Import and register the basic chat command
-            from .commands import OpenChatCommand
+            # Import and register the commands
+            from .commands import OpenChatCommand, ProviderManagerCommand
 
             # Register commands with FreeCAD
             Gui.addCommand("AI_OpenChat", OpenChatCommand())
+            Gui.addCommand("AI_ProviderManager", ProviderManagerCommand())
 
-            logger.info("AI commands registered")
+            logger.info("AI commands registered: AI_OpenChat, AI_ProviderManager")
         except Exception as e:
             logger.error("Failed to register commands: %s", str(e))
 
@@ -191,21 +192,3 @@ class AIWorkbench(BaseWorkbench):
     def GetClassName(self):
         """Return the FreeCAD class identifier expected for Python workbenches."""
         return "Gui::PythonWorkbench"
-
-
-# Register commands that will be available in the workbench
-def register_commands():
-    """Register FreeCAD commands for the AI workbench"""
-    try:
-        # Import command classes (will be created later)
-        # from freecad_ai_addon.integration.commands import (
-        #     OpenChatCommand,
-        #     AgentModeCommand,
-        #     SettingsCommand
-        # )
-
-        # For now, create placeholder commands
-        logger.info("AI commands registration prepared")
-
-    except Exception as e:
-        logger.error("Failed to register commands: %s", str(e))

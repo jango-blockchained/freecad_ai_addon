@@ -25,6 +25,24 @@ Our system employs specialized AI agents, each optimized for specific aspects of
   - Chain-of-thought reasoning for complex decomposition
   - Design for Manufacturing (DFM) awareness
 
+### 🏭 Manufacturing Advisor (materials, processes, cost)
+
+- In FreeCAD, switch to the "AI Assistant" workbench.
+- Menu/Toolbar: AI Assistant → "Manufacturing Advice".
+- Select a part (optional), enter a quantity, and review:
+  - Recommended materials and processes with scores/lead time
+  - Cost estimate breakdown and DFM recommendations
+  - Risks and suggested timeline
+
+Optional Python API (outside FreeCAD GUI):
+
+```python
+from freecad_ai_addon.advanced_features import ManufacturingAdvisor
+
+advisor = ManufacturingAdvisor(mock_mode=True)
+advice = advisor.analyze_manufacturability(object_name="Bracket", quantity=25)
+print(advice.summary)
+```
 #### **Coder Agent** - API Specialist & Code Generation
 - **Role**: Converts atomic design goals into precise FreeCAD Python scripts
 - **Capabilities**:

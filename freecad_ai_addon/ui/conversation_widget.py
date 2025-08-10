@@ -738,10 +738,32 @@ class ConversationWidget(QWidget):
 
     def _show_search(self):
         """Show search dialog"""
-        # TODO: Implement search functionality
-        QtWidgets.QMessageBox.information(
-            self, "Search", "Search functionality coming soon!"
+        from PySide6.QtWidgets import QInputDialog
+
+        search_text, ok = QInputDialog.getText(
+            self, "Search Messages", "Enter search term:"
         )
+
+        if ok and search_text.strip():
+            self._search_messages(search_text.strip())
+
+    def _search_messages(self, search_term: str):
+        """Search for messages containing the search term"""
+        found_count = 0
+        search_term_lower = search_term.lower()
+
+        # Highlight matching messages and count them
+        for message in self.conversation_area.messages:
+            if search_term_lower in message.content.lower():
+                found_count += 1
+
+        # Show search results
+        if found_count > 0:
+            self.add_system_message(
+                f"Found {found_count} message(s) containing '{search_term}'"
+            )
+        else:
+            self.add_system_message(f"No messages found containing '{search_term}'")
 
     def _clear_conversation(self):
         """Clear the conversation after confirmation"""
