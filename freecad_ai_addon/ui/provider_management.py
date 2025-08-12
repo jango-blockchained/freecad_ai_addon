@@ -7,7 +7,14 @@ connection testing, and usage statistics.
 
 import asyncio
 from typing import Optional, Dict
-from PySide6 import QtWidgets, QtCore
+
+try:
+    from PySide import QtCore, QtGui as QtWidgets  # type: ignore
+except Exception:
+    try:
+        from PySide2 import QtWidgets, QtCore  # type: ignore
+    except Exception:
+        from PySide6 import QtWidgets, QtCore  # type: ignore
 
 from freecad_ai_addon.ui.security_dialogs import APIKeyInputDialog
 from freecad_ai_addon.core.provider_status import (

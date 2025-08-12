@@ -43,7 +43,7 @@ class ExecutionPlan:
     """Plan for executing multiple related tasks"""
 
     id: str
-    description: str
+    description: str = ""
     tasks: List[AgentTask] = field(default_factory=list)
     dependencies: Dict[str, List[str]] = field(default_factory=dict)
     status: PlanStatus = PlanStatus.CREATED

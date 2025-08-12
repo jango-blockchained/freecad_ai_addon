@@ -6,7 +6,14 @@ Integration of the conversation widget as a dockable panel in FreeCAD.
 
 import FreeCAD as App
 import FreeCADGui as Gui
-from PySide6 import QtWidgets, QtCore
+
+try:
+    from PySide import QtCore, QtGui as QtWidgets  # type: ignore
+except Exception:
+    try:
+        from PySide2 import QtCore, QtWidgets  # type: ignore
+    except Exception:
+        from PySide6 import QtCore, QtWidgets  # type: ignore
 
 from freecad_ai_addon.ui.enhanced_conversation_widget import EnhancedConversationWidget
 from freecad_ai_addon.integration.context_providers import FreeCADContextProvider

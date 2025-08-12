@@ -14,10 +14,10 @@ from freecad_ai_addon.agent.base_agent import (
 def make_task(task_id: str) -> AgentTask:
     return AgentTask(
         id=task_id,
-        type=TaskType.GEOMETRY_CREATION,
-        operation="noop",
+        task_type=TaskType.GEOMETRY_CREATION,
+        description="noop",
         parameters={},
-        agent_name="Dummy",
+        context={},
     )
 
 
@@ -32,7 +32,7 @@ def test_execute_plan_completes_when_task_fails(monkeypatch):
 
     def fake_exec(self: TaskPlanner, task: AgentTask) -> TaskResult:
         if task.id == "t1":
-            return TaskResult(status=TaskStatus.COMPLETED, result={"ok": True})
+            return TaskResult(status=TaskStatus.COMPLETED, result_data={"ok": True})
         return TaskResult(status=TaskStatus.FAILED, error_message="boom")
 
     monkeypatch.setattr(TaskPlanner, "_execute_single_task", fake_exec, raising=True)
@@ -56,7 +56,7 @@ def test_execute_plan_all_success(monkeypatch):
     plan.add_task(t2, dependencies=["a"])  # sequential
 
     def fake_exec(_self: TaskPlanner, _task: AgentTask) -> TaskResult:
-        return TaskResult(status=TaskStatus.COMPLETED, result={"ok": True})
+        return TaskResult(status=TaskStatus.COMPLETED, result_data={"ok": True})
 
     monkeypatch.setattr(TaskPlanner, "_execute_single_task", fake_exec, raising=True)
 

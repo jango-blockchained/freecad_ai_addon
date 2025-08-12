@@ -6,15 +6,40 @@ Shows material/process recommendations and cost estimates in a simple Qt dialog.
 
 from typing import List
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QLabel,
-    QTextEdit,
-    QHBoxLayout,
-    QPushButton,
-)
+# Prefer FreeCAD-bundled Qt bindings: PySide (Qt4) or PySide2 (Qt5). Avoid hard-dependence on PySide6.
+try:
+    from PySide import QtCore as _QtCore  # type: ignore
+    from PySide import QtGui as _QtGui  # type: ignore
+
+    Qt = _QtCore.Qt  # type: ignore
+    QDialog = _QtGui.QDialog  # type: ignore
+    QVBoxLayout = _QtGui.QVBoxLayout  # type: ignore
+    QLabel = _QtGui.QLabel  # type: ignore
+    QTextEdit = _QtGui.QTextEdit  # type: ignore
+    QHBoxLayout = _QtGui.QHBoxLayout  # type: ignore
+    QPushButton = _QtGui.QPushButton  # type: ignore
+except Exception:
+    try:
+        from PySide2.QtCore import Qt  # type: ignore
+        from PySide2.QtWidgets import (  # type: ignore
+            QDialog,
+            QVBoxLayout,
+            QLabel,
+            QTextEdit,
+            QHBoxLayout,
+            QPushButton,
+        )
+    except Exception:
+        # Last resort, some environments may provide PySide6
+        from PySide6.QtCore import Qt  # type: ignore
+        from PySide6.QtWidgets import (  # type: ignore
+            QDialog,
+            QVBoxLayout,
+            QLabel,
+            QTextEdit,
+            QHBoxLayout,
+            QPushButton,
+        )
 
 from freecad_ai_addon.advanced_features import (
     ManufacturingAdvisor,

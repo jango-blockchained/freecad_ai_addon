@@ -194,3 +194,16 @@ Verified with FreeCAD 1.0.2 Python interpreter from extracted AppImage:
 - ✅ Icon, MenuText, and ToolTip properly set
 - ✅ Helper functions (get_addon_dir, safe_print) work correctly
 - ✅ Works in both GUI and headless modes
+
+### 16. Fixed _ICON_PATH Undefined Error (Bulletproof Solution)
+
+- **Issue**: `NameError: name '_ICON_PATH' is not defined` when loading the workbench
+- **Root Cause**: 
+  - The `_compute_icon_path()` function could fail, leaving `_ICON_PATH` undefined
+  - `safe_print` calls inside the function could also throw exceptions during initialization
+- **Solution**:
+  - Initialize `_ICON_PATH = ""` BEFORE any try block to guarantee it exists
+  - Removed all `safe_print` calls from inside `_compute_icon_path()` to prevent nested exceptions
+  - Wrapped icon path computation in try-except with nested exception handling for safe_print
+  - Made the function completely silent on errors, always returning a valid string
+  - Result: `_ICON_PATH` is guaranteed to be defined no matter what happens during initialization

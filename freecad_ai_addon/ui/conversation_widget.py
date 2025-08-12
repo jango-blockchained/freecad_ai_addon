@@ -12,24 +12,72 @@ from typing import List, Dict, Optional, Any
 from dataclasses import dataclass, field
 from enum import Enum
 
-from PySide6 import QtWidgets, QtCore
-from PySide6.QtCore import Signal, QTimer
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QTextEdit,
-    QPushButton,
-    QScrollArea,
-    QFrame,
-    QSplitter,
-    QLabel,
-    QFileDialog,
-    QToolButton,
-    QTextBrowser,
-    QMessageBox,
-)
-from PySide6.QtGui import QFont, QColor, QSyntaxHighlighter, QTextCharFormat
+try:
+    from PySide import QtCore as QtCoreCompat  # type: ignore
+    from PySide import QtGui as QtWidgetsCompat  # type: ignore
+
+    QtWidgets = QtWidgetsCompat
+    QtCore = QtCoreCompat
+    Signal = QtCoreCompat.Signal
+    QTimer = QtCoreCompat.QTimer
+    from PySide.QtGui import (
+        QWidget,
+        QVBoxLayout,
+        QHBoxLayout,
+        QTextEdit,
+        QPushButton,
+        QScrollArea,
+        QFrame,
+        QSplitter,
+        QLabel,
+        QFileDialog,
+        QToolButton,
+        QTextBrowser,
+        QMessageBox,
+        QFont,
+        QColor,
+        QSyntaxHighlighter,
+        QTextCharFormat,
+    )  # type: ignore
+except Exception:
+    try:
+        from PySide2 import QtWidgets, QtCore  # type: ignore
+        from PySide2.QtCore import Signal, QTimer  # type: ignore
+        from PySide2.QtGui import QFont, QColor, QSyntaxHighlighter, QTextCharFormat  # type: ignore
+        from PySide2.QtWidgets import (
+            QWidget,
+            QVBoxLayout,
+            QHBoxLayout,
+            QTextEdit,
+            QPushButton,
+            QScrollArea,
+            QFrame,
+            QSplitter,
+            QLabel,
+            QFileDialog,
+            QToolButton,
+            QTextBrowser,
+            QMessageBox,
+        )  # type: ignore
+    except Exception:
+        from PySide6 import QtWidgets, QtCore
+        from PySide6.QtCore import Signal, QTimer
+        from PySide6.QtGui import QFont, QColor, QSyntaxHighlighter, QTextCharFormat
+        from PySide6.QtWidgets import (
+            QWidget,
+            QVBoxLayout,
+            QHBoxLayout,
+            QTextEdit,
+            QPushButton,
+            QScrollArea,
+            QFrame,
+            QSplitter,
+            QLabel,
+            QFileDialog,
+            QToolButton,
+            QTextBrowser,
+            QMessageBox,
+        )
 
 from freecad_ai_addon.utils.logging import get_logger
 from freecad_ai_addon.utils.config import get_config_manager

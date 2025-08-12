@@ -2,13 +2,30 @@
 Test for Conversation Widget
 
 Basic test to ensure the conversation widget components work correctly.
+Runs headless and avoids mixing Qt bindings.
 """
 
+import os
 import sys
 import pytest
 
-pytest.importorskip("PySide6")
-from PySide6.QtWidgets import QApplication, QMainWindow
+# Ensure headless Qt
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+# Import the same binding family as the widget prefers: PySide2 first, then PySide6
+qt_loaded = False
+try:
+    from PySide2.QtWidgets import QApplication, QMainWindow  # type: ignore
+
+    qt_loaded = True
+except Exception:
+    try:
+        from PySide6.QtWidgets import QApplication, QMainWindow  # type: ignore
+
+        qt_loaded = True
+    except Exception:
+        pytest.skip("No compatible Qt binding (PySide2/PySide6) available")
+
 from freecad_ai_addon.ui.conversation_widget import ConversationWidget
 
 
@@ -67,8 +84,8 @@ def test_conversation_widget():
 
     conversation_widget.message_sent.connect(on_message_sent)
 
-    # Show window
-    window.show()
+    # Do not show the window in headless test environments
+    # window.show()
 
     return app, window, conversation_widget
 

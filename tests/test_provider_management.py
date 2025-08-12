@@ -11,7 +11,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from freecad_ai_addon.utils.security import CredentialManager
-from freecad_ai_addon.core.provider_status import ProviderMonitor, ProviderStatus
+from freecad_ai_addon.core.provider_status import (
+    ProviderMonitor,
+    ProviderStatus,
+    ProviderHealth,
+)
 from freecad_ai_addon.core.connection_manager import ConnectionManager, ConnectionConfig
 
 
@@ -98,11 +102,6 @@ class TestProviderManagementSystem:
             call_count += 1
             if call_count == 1:
                 # First call fails
-                from freecad_ai_addon.core.provider_status import (
-                    ProviderHealth,
-                    ProviderStatus,
-                )
-
                 return ProviderHealth(
                     status=ProviderStatus.ERROR,
                     last_check=0,

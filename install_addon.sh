@@ -12,19 +12,20 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    # Log to stderr so command substitutions don't capture status lines
+    echo -e "${BLUE}[INFO]${NC} $1" 1>&2
 }
 
 print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[SUCCESS]${NC} $1" 1>&2
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}[WARNING]${NC} $1" 1>&2
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[ERROR]${NC} $1" 1>&2
 }
 
 # Default FreeCAD Mod directories (in order of preference)
@@ -112,9 +113,11 @@ install_addon() {
             rm "$TARGET_LINK"
         fi
     elif [ -e "$TARGET_LINK" ]; then
-        print_error "Target exists but is not a symlink: $TARGET_LINK"
-        print_error "Please remove it manually and run this script again"
-        exit 1
+        # Handle existing non-symlink (e.g., directory from copy-based install)
+        BACKUP="$TARGET_LINK.backup.$(date +%Y%m%d%H%M%S)"
+        print_warning "Target exists and is not a symlink: $TARGET_LINK"
+        print_status "Moving existing target to backup: $BACKUP"
+        mv "$TARGET_LINK" "$BACKUP"
     fi
     
     # Create the symlink
@@ -148,8 +151,13 @@ uninstall_addon() {
             print_success "Symlink removed"
             return 0
         elif [ -e "$target_link" ]; then
+            # For convenience, move existing directory to a backup instead of deleting
+            BACKUP="$target_link.backup.$(date +%Y%m%d%H%M%S)"
             print_warning "Found non-symlink at: $target_link"
-            print_warning "Please remove it manually"
+            print_status "Moving existing target to backup: $BACKUP"
+            mv "$target_link" "$BACKUP"
+            print_success "Moved to backup: $BACKUP"
+            return 0
         fi
     done
     

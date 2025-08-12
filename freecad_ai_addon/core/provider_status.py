@@ -46,7 +46,11 @@ class ProviderMonitor:
 
     def __init__(self):
         """Initialize the provider monitor"""
-        self.credential_manager = get_credential_manager()
+        # Defer resolving credential manager until first use so that tests
+        # which construct a temporary CredentialManager instance (with a
+        # different config_dir) can be respected. We'll resolve it lazily
+        # at call sites to pick up any recent overrides.
+        self.credential_manager = None
         self._status_cache: Dict[str, ProviderHealth] = {}
         self._status_callbacks: Dict[str, list[Callable]] = {}
         self._monitoring_active = False
@@ -134,6 +138,8 @@ class ProviderMonitor:
         start_time = time.time()
 
         try:
+            if self.credential_manager is None:
+                self.credential_manager = get_credential_manager()
             # Get credentials
             api_key = self.credential_manager.get_credential(provider, "api_key")
             if not api_key and provider != "ollama":

@@ -11,24 +11,73 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
 
-from PySide6 import QtWidgets
-from PySide6.QtCore import Signal, QTimer, QThread, pyqtSignal
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QLabel,
-    QSpinBox,
-    QDoubleSpinBox,
-    QComboBox,
-    QCheckBox,
-    QTextEdit,
-    QMessageBox,
-    QFrame,
-    QGroupBox,
-)
-from PySide6.QtGui import QFont
+try:
+    from PySide import QtCore as QtCoreCompat  # type: ignore
+    from PySide import QtGui as QtWidgets  # type: ignore
+
+    Signal = QtCoreCompat.Signal
+    QTimer = QtCoreCompat.QTimer
+    QThread = QtCoreCompat.QThread
+    pyqtSignal = QtCoreCompat.Signal
+    from PySide.QtGui import (
+        QWidget,
+        QVBoxLayout,
+        QHBoxLayout,
+        QPushButton,
+        QLabel,
+        QSpinBox,
+        QDoubleSpinBox,
+        QComboBox,
+        QCheckBox,
+        QTextEdit,
+        QMessageBox,
+        QFrame,
+        QGroupBox,
+        QFont,
+    )  # type: ignore
+except Exception:
+    try:
+        from PySide2 import QtWidgets  # type: ignore
+        from PySide2.QtCore import Signal, QTimer, QThread  # type: ignore
+        from PySide2.QtWidgets import (
+            QWidget,
+            QVBoxLayout,
+            QHBoxLayout,
+            QPushButton,
+            QLabel,
+            QSpinBox,
+            QDoubleSpinBox,
+            QComboBox,
+            QCheckBox,
+            QTextEdit,
+            QMessageBox,
+            QFrame,
+            QGroupBox,
+        )  # type: ignore
+        from PySide2.QtGui import QFont  # type: ignore
+
+        def pyqtSignal(*args, **kwargs):
+            return Signal(*args, **kwargs)
+
+    except Exception:
+        from PySide6 import QtWidgets
+        from PySide6.QtCore import Signal, QTimer, QThread, pyqtSignal
+        from PySide6.QtWidgets import (
+            QWidget,
+            QVBoxLayout,
+            QHBoxLayout,
+            QPushButton,
+            QLabel,
+            QSpinBox,
+            QDoubleSpinBox,
+            QComboBox,
+            QCheckBox,
+            QTextEdit,
+            QMessageBox,
+            QFrame,
+            QGroupBox,
+        )
+        from PySide6.QtGui import QFont
 
 try:
     import FreeCAD as App

@@ -7,16 +7,41 @@ and seamless integration with the AI Agent Framework.
 
 from typing import Optional
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QSplitter,
-    QTabWidget,
-    QFrame,
-    QLabel,
-)
+try:
+    from PySide import QtCore as QtCoreCompat  # type: ignore
+    from PySide import QtGui as QtWidgetsCompat  # type: ignore
+
+    Qt = QtCoreCompat.Qt
+    QWidget = QtWidgetsCompat.QWidget
+    QVBoxLayout = QtWidgetsCompat.QVBoxLayout
+    QHBoxLayout = QtWidgetsCompat.QHBoxLayout
+    QSplitter = QtWidgetsCompat.QSplitter
+    QTabWidget = QtWidgetsCompat.QTabWidget
+    QFrame = QtWidgetsCompat.QFrame
+    QLabel = QtWidgetsCompat.QLabel
+except Exception:
+    try:
+        from PySide2.QtCore import Qt
+        from PySide2.QtWidgets import (
+            QWidget,
+            QVBoxLayout,
+            QHBoxLayout,
+            QSplitter,
+            QTabWidget,
+            QFrame,
+            QLabel,
+        )
+    except Exception:
+        from PySide6.QtCore import Qt
+        from PySide6.QtWidgets import (
+            QWidget,
+            QVBoxLayout,
+            QHBoxLayout,
+            QSplitter,
+            QTabWidget,
+            QFrame,
+            QLabel,
+        )
 
 from freecad_ai_addon.ui.conversation_widget import ConversationWidget
 from freecad_ai_addon.integration.agent_conversation_integration import (

@@ -30,7 +30,15 @@ class ShowManufacturingAdviceCommand:
         try:
             object_name = self._get_selected_object_name() or "ActivePart"
             dialog = ManufacturingAdviceDialog(object_name=object_name, quantity=50)
-            dialog.exec()
+            # Support both PySide2 (exec_) and PySide6 (exec)
+            if hasattr(dialog, "exec"):
+                dialog.exec()  # type: ignore[attr-defined]
+            elif hasattr(dialog, "exec_"):
+                dialog.exec_()  # type: ignore[attr-defined]
+            else:
+                # Fallback: show non-blocking if neither method exists
+                if hasattr(dialog, "show"):
+                    dialog.show()  # type: ignore[attr-defined]
         except Exception as e:
             logger.error("Failed to show manufacturing advice: %s", e)
             if Gui:

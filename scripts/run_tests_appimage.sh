@@ -3,6 +3,11 @@
 # Falls back to normal python if the AppImage tree is missing.
 set -euo pipefail
 
+# Ensure Qt can run headlessly in CI/containers
+export QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}
+export QT_PLUGIN_PATH=${QT_PLUGIN_PATH:-}
+export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/tmp}
+
 APPROOT="$(dirname "${BASH_SOURCE[0]}")/../squashfs-root"
 APPROOT="$(realpath "$APPROOT")"
 PYBIN="$APPROOT/usr/bin/python"

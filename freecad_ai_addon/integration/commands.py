@@ -9,7 +9,16 @@ per best practices for FreeCAD addons.
 import os
 import FreeCAD as App
 import FreeCADGui as Gui
-from PySide6 import QtCore, QtWidgets
+
+# Prefer FreeCAD-bundled Qt bindings: PySide (Qt4) or PySide2 (Qt5). Avoid PySide6.
+try:
+    from PySide import QtCore, QtGui as QtWidgets  # type: ignore
+except Exception:
+    try:
+        from PySide2 import QtCore, QtWidgets  # type: ignore
+    except Exception:
+        # As a last resort, try PySide6, but many FreeCAD builds will not support it
+        from PySide6 import QtCore, QtWidgets  # type: ignore
 
 from ..utils.logging import get_logger
 
@@ -111,7 +120,13 @@ class ProviderManagerCommand:
             logger.info("Opening AI Provider Manager")
 
             # For now, just show a message
-            from PySide6.QtWidgets import QMessageBox
+            try:
+                from PySide2.QtWidgets import QMessageBox  # type: ignore
+            except Exception:
+                try:
+                    from PySide.QtGui import QMessageBox  # type: ignore
+                except Exception:
+                    from PySide6.QtWidgets import QMessageBox  # type: ignore
 
             msg = QMessageBox()
             msg.setWindowTitle("AI Provider Manager")
