@@ -157,6 +157,40 @@ Create a comprehensive FreeCAD addon that integrates AI capabilities through Mod
 
 **Implementation Status**: Complete conversation management system with persistence, templates, export/import, search, and analytics. ConversationHistoryDialog and ConversationTemplatesWidget fully implemented.
 
+---
+
+## Phase 6: Advanced Feature Recognition (In Progress)
+
+### 6.1 Modular Feature Recognition Framework
+- [x] Refactored `feature_recognition.py` with pluggable detector architecture
+- [x] Added mock hole & fillet detectors (deterministic for tests)
+- [x] Added FreeCAD-aware detector stub (`FreeCADFeatureDetector`) with heuristic logic
+- [x] Added JSON serialization helpers (`to_dict`) for results & features
+- [x] Created service layer (`feature_recognition_service.py`) for UI/agent consumption
+- [x] Implemented unit tests: detector registration, mock analysis, failure isolation, JSON serialization
+- [ ] Real geometric analysis (future: robust B-Rep parsing for holes, fillets, chamfers)
+
+### 6.2 Planned Enhancements
+- [ ] Detector discovery via entry points / plugin registry
+- [ ] Confidence calibration using historical analysis data
+- [ ] Caching layer for repeated analyses on unchanged objects
+- [ ] Parallel detector execution (thread/process pool) with timeout handling
+- [ ] Advanced detectors: Pattern arrays, draft detection, rib/groove recognition
+- [ ] Manufacturing rules cross-check integration (link with design_rule_checker)
+
+### 6.3 Testing & Quality
+- [x] Added `tests/test_feature_recognition.py`
+- [ ] Add FreeCAD integration test (skipped if FreeCAD unavailable)
+- [ ] Performance baseline measurement & regression guard
+
+### 6.4 Integration
+- [ ] Expose feature recognition service through agent tool interface
+- [ ] Add conversation widget command: "Analyze selected object features"
+- [ ] Provide JSON summary & recommendations insertion into chat
+
+### Notes
+Initial framework in place; next steps focus on real geometry extraction, performance, and richer detector ecology. FreeCAD-dependent tests will be isolated/marked optional to keep CI green without FreeCAD.
+
 ### 4.4 Interactive Elements ✅
 
 - [x] Create interactive code execution buttons

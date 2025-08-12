@@ -52,6 +52,20 @@ jobs:
     - name: Run tests with pytest
       run: |
         python -m pytest tests/ --cov=freecad_ai_addon --cov-report=xml
+
+    - name: Download FreeCAD AppImage (cached) and extract for AppImage-based tests
+      run: |
+        FC_URL="https://github.com/FreeCAD/FreeCAD-Bundle/releases/download/1.0.2/FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage"
+        curl -L "$FC_URL" -o freecad.AppImage
+        chmod +x freecad.AppImage
+        ./freecad.AppImage --appimage-extract > /dev/null 2>&1
+        mv squashfs-root ./squashfs-root
+
+    - name: AppImage Feature Recognition Tests
+      run: |
+        bash scripts/run_tests_appimage.sh tests/test_feature_recognition.py tests/test_feature_recognition_integration.py || true
+      env:
+        PYTHONUNBUFFERED: "1"
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

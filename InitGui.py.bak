@@ -1,0 +1,231 @@
+"""
+FreeCAD AI Addon - GUI Initialization (InitGui.py)
+
+Robust, test-friendly initialization of the AI Assistant workbench.
+Works both inside FreeCAD GUI and in headless/test environments.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+
+# --- FreeCAD import guards -------------------------------------------------
+try:  # Try to import real FreeCAD modules
+    import FreeCAD as App  # type: ignore
+    try:
+        import FreeCADGui as Gui  # type: ignore
+    except ImportError:
+        Gui = None  # type: ignore
+except Exception:  # Not running inside FreeCAD or GUI
+    # Minimal dummies so tests can import this module safely
+    class _DummyConsole:
+        def PrintMessage(self, msg):
+            print(msg)
+
+        def PrintError(self, msg):
+            print(f"ERROR: {msg}")
+
+        def PrintWarning(self, msg):
+            print(f"WARNING: {msg}")
+
+    class _DummyApp:  # Mimic App subset used here
+        Console = _DummyConsole()
+
+        @staticmethod
+        def getUserAppDataDir():
+            # Reasonable default; FreeCAD changes this per platform
+            return os.path.expanduser("~/.FreeCAD/")
+
+    App = _DummyApp()  # type: ignore
+    Gui = None  # type: ignore
+
+# Determine a base workbench class that doesn't explode in headless mode
+if Gui is not None and hasattr(Gui, "Workbench"):
+    BaseWorkbench = Gui.Workbench  # type: ignore[attr-defined]
+else:
+    class BaseWorkbench(object):  # Fallback for tests/headless
+        def __init__(self):
+            pass
+
+
+# --- Utilities --------------------------------------------------------------
+def safe_print(message: str) -> None:
+    """Print a message via FreeCAD console if available, else stdout."""
+    try:
+        App.Console.PrintMessage(f"{message}\n")  # type: ignore[attr-defined]
+    except Exception:
+        print(message)
+
+
+def get_addon_dir() -> str:
+    """Resolve the addon root directory robustly.
+
+    Search order:
+    1) This file's directory (repo installation)
+    2) FreeCAD user Mod path (Addon Manager installs)
+    3) Current working directory (last resort)
+    """
+    # 1) Resolve from this file
+    try:
+        here = os.path.dirname(os.path.realpath(__file__))
+        return here
+    except Exception:
+        pass
+
+    # 2) Resolve from FreeCAD user Mod dir
+    try:
+        user_mod_path = os.path.join(
+            App.getUserAppDataDir(), "Mod", "freecad_ai_addon"  # type: ignore[attr-defined]
+        )
+        if os.path.exists(user_mod_path):
+            return os.path.realpath(user_mod_path)
+    except Exception:
+        pass
+
+    # 3) Fallback
+    return os.getcwd()
+
+
+def _addon_root() -> str:
+    """Alias for addon root; kept for compatibility with other modules."""
+    return get_addon_dir()
+
+
+def _compute_icon_path() -> str:
+    """Compute absolute path to the workbench icon.
+
+    Returns empty string if not found (contract: Icon must be a string).
+    """
+    candidates = []
+    try:
+        # Primary: resources/icons next to this file (repo layout)
+        base = _addon_root()
+        candidates.append(os.path.join(base, "resources", "icons", "freecad_ai_addon.svg"))
+    except Exception:
+        pass
+
+    # Also try FreeCAD user Mod installation location
+    try:
+        user_mod = os.path.join(App.getUserAppDataDir(), "Mod", "freecad_ai_addon")  # type: ignore[attr-defined]
+        candidates.append(os.path.join(user_mod, "resources", "icons", "freecad_ai_addon.svg"))
+    except Exception:
+        pass
+
+    for p in candidates:
+        try:
+            if p and os.path.exists(p):
+                return os.path.realpath(p)
+        except Exception:
+            continue
+    # Contract with tests: Icon must be str, may be empty
+    return ""
+
+
+# Ensure addon directory is importable (useful for tests or direct runs)
+_ADDON_DIR = get_addon_dir()
+if _ADDON_DIR not in sys.path:
+    sys.path.insert(0, _ADDON_DIR)
+
+safe_print("FreeCAD AI Addon: Initializing InitGui.py ...")
+safe_print(f"FreeCAD AI Addon: Addon directory resolved to: {_ADDON_DIR}")
+
+
+# Pre-compute icon path once so metadata tools and tests can read it
+_ICON_PATH = _compute_icon_path()
+
+
+# --- Workbench --------------------------------------------------------------
+class AIWorkbench(BaseWorkbench):
+    """AI-powered design assistant workbench."""
+
+    # Class-level metadata used by FreeCAD and tests
+    MenuText = "AI Assistant"
+    ToolTip = "AI-powered design assistant with conversation and agent tools"
+    Icon = _ICON_PATH or ""  # Must be a string
+
+    def __init__(self):
+        super().__init__()
+        # Keep instance and class Icon in sync
+        self.Icon = _ICON_PATH or ""
+        try:
+            type(self).Icon = self.Icon
+        except Exception:
+            pass
+
+    # Lifecycle methods (GUI-safe; no-ops in tests)
+    def Initialize(self) -> None:
+        """Set up toolbars, menus, and register commands when GUI is available."""
+        safe_print("AI Workbench: Initializing GUI ...")
+        # Import and register commands lazily to avoid issues outside GUI
+        try:
+            if Gui is None or not hasattr(Gui, "addCommand"):
+                return  # Nothing to register headlessly
+
+            # Core AI commands
+            try:
+                from freecad_ai_addon.integration.commands import (
+                    OpenChatCommand,
+                    ProviderManagerCommand,
+                )
+
+                Gui.addCommand("AI_OpenChat", OpenChatCommand())
+                Gui.addCommand("AI_ProviderManager", ProviderManagerCommand())
+            except Exception as e:
+                safe_print(f"AI Workbench: Failed to register core commands: {e}")
+
+            # Manufacturing command self-registers on import when GUI is present
+            try:
+                import freecad_ai_addon.commands.manufacturing_commands  # noqa: F401
+            except Exception as e:
+                safe_print(f"AI Workbench: Failed to load manufacturing commands: {e}")
+
+            # Build toolbar/menu if append helpers exist
+            commands = [
+                "AI_OpenChat",
+                "AI_ProviderManager",
+                "AI_ShowManufacturingAdvice",
+            ]
+            try:
+                if hasattr(self, "appendToolbar"):
+                    self.appendToolbar("AI Assistant", commands)
+                if hasattr(self, "appendMenu"):
+                    self.appendMenu("AI Assistant", commands)
+            except Exception as e:
+                safe_print(f"AI Workbench: Failed to create toolbars/menus: {e}")
+        except Exception as e:
+            safe_print(f"AI Workbench: Initialize failed: {e}")
+
+    def Activated(self) -> None:
+        safe_print("AI Assistant workbench activated.")
+
+    def Deactivated(self) -> None:
+        safe_print("AI Assistant workbench deactivated.")
+
+    def GetClassName(self) -> str:
+        return "Gui::PythonWorkbench"
+
+
+# Export symbol for tests and FreeCAD discovery
+globals()["AIWorkbench"] = AIWorkbench
+
+
+# --- Workbench Registration -------------------------------------------------
+try:
+    if Gui is not None and hasattr(Gui, "addWorkbench"):
+        safe_print("AI Workbench: Registering workbench ...")
+        # FreeCAD expects the class, not an instance
+        Gui.addWorkbench(AIWorkbench)
+        safe_print("AI Workbench: Registration successful.")
+    else:
+        safe_print("AI Workbench: GUI not available, skipping registration.")
+except Exception as e:
+    safe_print(f"AI Workbench: Failed to register workbench: {e}")
+
+
+# --- Addon metadata ---------------------------------------------------------
+__version__ = "0.9.0"
+__title__ = "FreeCAD AI"
+__author__ = "jango-blockchained"
+__url__ = "https://github.com/jango-blockchained/mcp-freecad"
+

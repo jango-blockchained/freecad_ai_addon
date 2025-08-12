@@ -14,6 +14,7 @@ import os
 
 
 def test_workbench_icon_contract():
+    """Test contract for AIWorkbench icon and class attributes."""
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
     import InitGui  # noqa: E402

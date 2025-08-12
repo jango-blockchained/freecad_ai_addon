@@ -665,9 +665,13 @@ pylint freecad_ai_addon/
 
 # Security scanning
 bandit -r freecad_ai_addon/
+#### Using the bundled FreeCAD AppImage environment
+If you have the FreeCAD AppImage extracted (or the CI extraction step has run), you can execute tests with the embedded Python and libraries (helpful for FreeCAD-dependent imports) via:
+
 ```
 
 #### **Testing Strategy**
+
 ```bash
 # Unit tests
 pytest tests/unit/ -v

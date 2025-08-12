@@ -40,9 +40,14 @@ for DIR in "${REPO_DIR}" "${INSTALLED_DIR}"; do
   fi
 done
 
-# Copy the critical files
-cp -v "${REPO_DIR}/InitGui.py" "${INSTALLED_DIR}/"
-cp -v "${REPO_DIR}/Init.py" "${INSTALLED_DIR}/"
+# Copy all repository files into the installed addon directory
+echo "Copying all repository files to installed addon directory..."
+echo "Removing existing installed addon directory..."
+rm -rf "${INSTALLED_DIR}"
+echo "Recreating installed addon directory..."
+mkdir -p "${INSTALLED_DIR}"
+echo "Copying repository files to installed addon directory..."
+cp -rv "${REPO_DIR}/." "${INSTALLED_DIR}/"
 
 # Copy resources if needed
 if [ -d "${REPO_DIR}/resources" ]; then
