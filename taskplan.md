@@ -159,42 +159,6 @@ Create a comprehensive FreeCAD addon that integrates AI capabilities through Mod
 
 ---
 
-## Phase 6: Advanced Feature Recognition (Baseline Integration Complete)
-
-### 6.1 Modular Feature Recognition Framework
-- [x] Refactored `feature_recognition.py` with pluggable detector architecture
-- [x] Added mock hole & fillet detectors (deterministic for tests)
-- [x] Added FreeCAD-aware detector stub (`FreeCADFeatureDetector`) with heuristic logic
-- [x] Added JSON serialization helpers (`to_dict`) for results & features
-- [x] Created service layer (`feature_recognition_service.py`) for UI/agent consumption
-- [x] Implemented unit tests: detector registration, mock analysis, failure isolation, JSON serialization
-- [ ] Real geometric analysis (future: robust B-Rep parsing for holes, fillets, chamfers)
-
-### 6.2 Planned Enhancements
-- [ ] Detector discovery via entry points / plugin registry
-- [ ] Confidence calibration using historical analysis data
-- [ ] Caching layer for repeated analyses on unchanged objects
-- [ ] Parallel detector execution (thread/process pool) with timeout handling
-- [ ] Advanced detectors: Pattern arrays, draft detection, rib/groove recognition
-- [ ] Manufacturing rules cross-check integration (link with design_rule_checker)
-
-### 6.3 Testing & Quality
-- [x] Added `tests/test_feature_recognition.py`
-- [x] Added FreeCAD integration test (skipped if FreeCAD unavailable)
-- [ ] Performance baseline measurement & regression guard
-
-### 6.4 Integration
-- [x] Exposed feature recognition service via agent/tooling interface
-- [x] Added conversation flow for "Analyze selected object features" through the conversation widget
-- [x] Provide JSON summary & recommendations insertion into chat
-
-### Notes
-Baseline integration complete and fully covered by unit tests; next steps focus on real geometry extraction, performance, and richer detector ecology. FreeCAD-dependent tests are isolated/marked optional to keep CI green without FreeCAD.
-
-### Verification
-- Full suite passing locally with AppImage Python: 127 passed, 2 skipped, 31 warnings
-- Provider management, conversation widget, agent framework, and feature-recognition scaffolding validated end-to-end by tests
-
 ### 4.4 Interactive Elements ✅
 
 - [x] Create interactive code execution buttons
@@ -497,6 +461,7 @@ Baseline integration complete and fully covered by unit tests; next steps focus 
     - Holes (through, blind, counterbored)
     - Fillets and chamfers
     - Standard fasteners and threads
+  - Status: Baseline integration complete (pluggable detectors, FreeCAD-aware stub, JSON serialization, service layer, unit tests). Next: robust B-Rep analysis, confidence calibration, caching, parallel execution.
 - [ ] Add design optimization suggestions
   - **Example**: "This design could be 15% lighter with topology optimization"
   - **Suggestions**: Material removal areas, stress concentration reduction
@@ -588,54 +553,11 @@ Baseline integration complete and fully covered by unit tests; next steps focus 
   - **Example Benchmarks**: Large assembly handling, complex geometry operations
   - **Metrics**: Response time, memory usage, CPU utilization
 
-### 7.2 Integration Testing
+ 
 
-- [ ] Test with multiple AI providers
-  - **Example**: Validate behavior with OpenAI, Anthropic, and Ollama simultaneously
-  - **Scenarios**: Provider failover, load balancing, capability differences
-- [ ] Validate FreeCAD version compatibility
-  - **Example**: Test with FreeCAD 0.20, 0.21, and development versions
-  - **API Changes**: Ensure backward compatibility handling
+ 
 
----
-
-## Phase 5: Agent Mode Implementation
-
-### 5.1 Agent Framework
-- [ ] Design autonomous agent architecture
-- [ ] Create task planning and execution engine
-- [ ] Implement goal decomposition algorithms
-- [ ] Create action validation system
-- [ ] Add safety constraints and boundaries
-- [ ] Implement progress tracking and reporting
-
-### 5.2 FreeCAD Action Library
-- [ ] Create comprehensive FreeCAD operation wrappers
-- [ ] Implement geometric analysis tools
-- [ ] Add measurement and validation functions
-- [ ] Create sketch generation capabilities
-- [ ] Implement part design operations
-- [ ] Add assembly and constraint management
-
-### 5.3 Intelligent Decision Making
-- [ ] Implement design pattern recognition
-- [ ] Create constraint solver integration
-- [ ] Add optimization algorithms for design choices
-- [ ] Implement error recovery mechanisms
-- [ ] Create design validation tools
-- [ ] Add performance optimization suggestions
-
-### 5.4 Agent Safety & Control
-- [ ] Implement user confirmation for critical operations
-- [ ] Create action preview and simulation
-- [ ] Add rollback capabilities
-- [ ] Implement resource usage limits
-- [ ] Create safety checks for design integrity
-- [ ] Add manual override capabilities
-
----
-
-## Phase 6: Advanced Features
+ 
 
 ### 6.1 CAD-Specific AI Tools
 - [ ] Create parametric design assistant
@@ -664,7 +586,7 @@ Baseline integration complete and fully covered by unit tests; next steps focus 
 
 ---
 
-## Phase 7: Testing & Quality Assurance
+ 
 
 ### 7.1 Unit Testing
 - [ ] Create comprehensive test suite for MCP integration
@@ -674,7 +596,6 @@ Baseline integration complete and fully covered by unit tests; next steps focus 
 - [ ] Create FreeCAD API integration tests
 - [ ] Add performance benchmarking tests
 
-### 7.2 Integration Testing
 ### 7.2 Integration Testing
 
 - [ ] Test with multiple AI providers
@@ -3245,3 +3166,56 @@ This updated task plan reflects the real implementation progress and provides co
   - **Solution**: Automated CI testing on Windows, Linux, macOS
 
 This comprehensive task plan now includes real implementation examples, current progress metrics, and specific technical details that reflect the actual state of the FreeCAD AI addon development.
+
+### Week 2 Detailed Task Breakdown (FreeCAD Action Library)
+
+- **Parametric modeling functions**
+  - Implement high-level helpers in `freecad_ai_addon/agent/geometry_agent.py` for: box, cylinder, sphere, pad, pocket, loft, sweep with parameter dicts.
+  - Add feature toggles and default parameter validation in `freecad_ai_addon/agent/base_agent.py` utilities.
+  - Extend `freecad_ai_addon/advanced_features/parametric_design_assistant.py` with preset templates (bracket, plate with holes, boss/rib patterns).
+
+- **Sketch creation and constraint automation**
+  - Expand `freecad_ai_addon/agent/sketch_action_library.py` to support: construction geometry, symmetry, tangent, equal, midpoint, and dimensional constraints with units.
+  - Add convenience APIs for rectangles, slots, arcs, and hole patterns.
+
+- **Boolean operations library**
+  - In `freecad_ai_addon/agent/geometry_agent.py`, add union, difference, intersection operations with safety checks (coplanarity, tolerance, empty result guards).
+  - Provide history tracking to allow undo/redo grouping in conversation-driven execution.
+
+- **Geometric analysis and validation tools**
+  - Extend `freecad_ai_addon/integration/context_providers.py` analysis with mass properties, minimum wall thickness probe (sampling), and bounding-box fit checks.
+  - Add manufacturing rule checks in `freecad_ai_addon/advanced_features/manufacturing_advisor.py` (fillet min radius, drill depth-to-diameter, overhangs for FDM).
+
+#### Acceptance Criteria (Week 2)
+
+- Unit tests cover new APIs and pass locally and in CI:
+  - `tests/test_enhanced_features.py` extended with parametric and boolean cases.
+  - `tests/test_feature_recognition.py` sanity checks remain green.
+  - `tests/test_decision_engine.py` updated for new action routing.
+- Conversation UI can invoke at least 5 new actions via `EnhancedConversationWidget` without blocking UI.
+- Safety validation prevents invalid ops and surfaces user-friendly errors.
+
+#### Test & Run Checklist
+
+- Fast checks:
+  - `bash docs/development/run_tests.sh`
+  - `bash docs/development/run_lint.sh`
+  - `bash docs/development/format_code.sh` (auto-fix style)
+- AppImage integration smoke test:
+  - `bash scripts/run_tests_appimage.sh` (optional for nightly)
+
+#### Deliverables
+
+- Public, documented functions in `geometry_agent.py` and `sketch_action_library.py` with examples in docstrings.
+- Updated user docs: add new commands and examples in `docs/user_manual.md` and `docs/README.md` sections.
+- Demo scripts/notebooks for: bracket template, hole pattern generator, fillet audit.
+
+---
+
+### Backlog Prep (Week 3-4 seeds)
+
+- **Task planning engine**: goal decomposition rules, progress reporting hooks, retry strategy taxonomy.
+- **Design pattern recognition**: detect plate, bracket, boss-rib patterns for quick actions.
+- **Manufacturing guidance**: rule sets per material/process, surfaced in the conversation sidebar.
+
+This continuation adds concrete Week 2 tasks, success criteria, and an executable test plan to drive development with high signal and minimal ambiguity.

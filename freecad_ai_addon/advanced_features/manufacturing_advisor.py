@@ -575,6 +575,22 @@ class ManufacturingAdvisor:
             ]
         )
 
+        # Additional manufacturing rules per Week 2 plan
+        # Minimum fillet radius guidance (generic)
+        recommendations.append(
+            "Apply fillets: avoid sharp internal corners; min radius typically >= 0.5 mm for machining"
+        )
+
+        # Drilling depth-to-diameter guideline
+        recommendations.append(
+            "For drilled holes, keep depth <= 10x diameter when possible; beyond that consider peck drilling or alternate processes"
+        )
+
+        # Overhang guideline for FDM 3D printing
+        recommendations.append(
+            "For FDM printing, limit unsupported overhangs to <= 45 degrees or add support structures"
+        )
+
         return recommendations
 
     def _get_drc_recommendations(self, object_name: str) -> List[str]:

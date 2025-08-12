@@ -1025,8 +1025,113 @@ class SketchActionLibrary:
         width: float,
         construction: bool = False,
     ) -> Dict[str, Any]:
-        """Placeholder for slot creation"""
-        return {"status": "not_implemented", "operation": "add_slot"}
+        """
+        Add a slot (two semicircles connected by parallel lines) to a sketch.
+
+        Args:
+            sketch_name: Target sketch name
+            start: Slot start center (x, y)
+            end: Slot end center (x, y)
+            width: Slot width (diameter of semicircle ends)
+            construction: Whether geometry is construction
+
+        Returns:
+            Dictionary with created geometry IDs and constraints
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        x1, y1 = start
+        x2, y2 = end
+        r = width / 2.0
+
+        # Direction unit vector from start to end
+        dx = x2 - x1
+        dy = y2 - y1
+        length = math.hypot(dx, dy)
+        if length <= 0:
+            raise ValueError("Slot start and end must be different points")
+        ux, uy = dx / length, dy / length
+        # Normal to direction
+        nx, ny = -uy, ux
+
+        # Compute edge line endpoints
+        p1 = App.Vector(x1 + nx * r, y1 + ny * r, 0)
+        p2 = App.Vector(x2 + nx * r, y2 + ny * r, 0)
+        p3 = App.Vector(x2 - nx * r, y2 - ny * r, 0)
+        p4 = App.Vector(x1 - nx * r, y1 - ny * r, 0)
+
+        # Lines connecting semicircles
+        line1_id = sketch.addGeometry(Part.LineSegment(p1, p2))
+        line2_id = sketch.addGeometry(Part.LineSegment(p3, p4))
+
+        # Semicircle arcs at ends using three-point arc
+        # Start end arc from p4 -> p1 with midpoint at start + direction*r
+        mid_start = App.Vector(x1 + ux * r, y1 + uy * r, 0)
+        arc1 = Part.Arc(p4, mid_start, p1)
+        arc1_id = sketch.addGeometry(arc1)
+
+        # End end arc from p2 -> p3 with midpoint at end - direction*r
+        mid_end = App.Vector(x2 - ux * r, y2 - uy * r, 0)
+        arc2 = Part.Arc(p2, mid_end, p3)
+        arc2_id = sketch.addGeometry(arc2)
+
+        # Optionally toggle construction
+        if construction:
+            for gid in (line1_id, line2_id, arc1_id, arc2_id):
+                sketch.toggleConstruction(gid)
+
+        # Add coincident constraints at four connections
+        constraints = []
+        constraints.append(
+            sketch.addConstraint(
+                Sketcher.Constraint("Coincident", line1_id, 1, arc1_id, 2)
+            )
+        )
+        constraints.append(
+            sketch.addConstraint(
+                Sketcher.Constraint("Coincident", line1_id, 2, arc2_id, 1)
+            )
+        )
+        constraints.append(
+            sketch.addConstraint(
+                Sketcher.Constraint("Coincident", line2_id, 1, arc2_id, 2)
+            )
+        )
+        constraints.append(
+            sketch.addConstraint(
+                Sketcher.Constraint("Coincident", line2_id, 2, arc1_id, 1)
+            )
+        )
+
+        # Parallel constraints for side lines
+        constraints.append(
+            sketch.addConstraint(Sketcher.Constraint("Parallel", line1_id, line2_id))
+        )
+
+        sketch.solve()
+        doc.recompute()
+        self.modified_sketches.append(sketch_name)
+
+        return {
+            "sketch_name": sketch_name,
+            "geometry_ids": {
+                "line_top": line1_id,
+                "line_bottom": line2_id,
+                "arc_start": arc1_id,
+                "arc_end": arc2_id,
+            },
+            "constraint_ids": constraints,
+            "geometry_type": "Slot",
+            "width": width,
+            "start": start,
+            "end": end,
+        }
 
     def add_sketch_fillet(
         self, sketch_name: str, geometry_id1: int, geometry_id2: int, radius: float
@@ -1078,9 +1183,45 @@ class SketchActionLibrary:
         geometry_id2: int,
         point_pos2: int,
     ) -> Dict[str, Any]:
-        """Placeholder for coincident constraint"""
-        # This would need more complex implementation
-        return {"status": "not_implemented", "operation": "add_coincident_constraint"}
+        """
+        Add a coincident constraint between two geometry points.
+
+        Args:
+            sketch_name: Name of the target sketch
+            geometry_id1: First geometry id
+            point_pos1: Point position on first geometry (1=start, 2=end, 3=center)
+            geometry_id2: Second geometry id
+            point_pos2: Point position on second geometry
+
+        Returns:
+            Dictionary with constraint information
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        constraint = Sketcher.Constraint(
+            "Coincident", geometry_id1, point_pos1, geometry_id2, point_pos2
+        )
+        constraint_id = sketch.addConstraint(constraint)
+        sketch.solve()
+        doc.recompute()
+
+        self.modified_sketches.append(sketch_name)
+
+        return {
+            "sketch_name": sketch_name,
+            "constraint_id": constraint_id,
+            "constraint_type": "Coincident",
+            "geometry_ids": [geometry_id1, geometry_id2],
+            "points": [point_pos1, point_pos2],
+            "status": "added",
+        }
 
     def add_diameter_constraint(
         self, sketch_name: str, geometry_id: int, diameter: float
@@ -1091,9 +1232,42 @@ class SketchActionLibrary:
     def add_angle_constraint(
         self, sketch_name: str, geometry_id1: int, geometry_id2: int, angle: float
     ) -> Dict[str, Any]:
-        """Placeholder for angle constraint"""
-        # This would need more complex implementation
-        return {"status": "not_implemented", "operation": "add_angle_constraint"}
+        """
+        Add an angle constraint between two lines.
+
+        Args:
+            sketch_name: Name of the target sketch
+            geometry_id1: First line geometry id
+            geometry_id2: Second line geometry id
+            angle: Angle in degrees
+
+        Returns:
+            Dictionary with constraint information
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        constraint = Sketcher.Constraint("Angle", geometry_id1, geometry_id2, angle)
+        constraint_id = sketch.addConstraint(constraint)
+        sketch.solve()
+        doc.recompute()
+
+        self.modified_sketches.append(sketch_name)
+
+        return {
+            "sketch_name": sketch_name,
+            "constraint_id": constraint_id,
+            "constraint_type": "Angle",
+            "geometry_ids": [geometry_id1, geometry_id2],
+            "value": angle,
+            "status": "added",
+        }
 
     def add_symmetric_constraint(
         self,
@@ -1102,8 +1276,38 @@ class SketchActionLibrary:
         geometry_id2: int,
         symmetry_line_id: int,
     ) -> Dict[str, Any]:
-        """Placeholder for symmetric constraint"""
-        return {"status": "not_implemented", "operation": "add_symmetric_constraint"}
+        """
+        Add a symmetric constraint between two geometries about a symmetry line.
+
+        Note: This assumes the symmetry line is a construction line in the same sketch.
+        For symmetry of endpoints, callers should provide point references via separate coincident/distance constraints.
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        constraint = Sketcher.Constraint(
+            "Symmetric", geometry_id1, geometry_id2, symmetry_line_id
+        )
+        constraint_id = sketch.addConstraint(constraint)
+        sketch.solve()
+        doc.recompute()
+
+        self.modified_sketches.append(sketch_name)
+
+        return {
+            "sketch_name": sketch_name,
+            "constraint_id": constraint_id,
+            "constraint_type": "Symmetric",
+            "geometry_ids": [geometry_id1, geometry_id2],
+            "symmetry_line_id": symmetry_line_id,
+            "status": "added",
+        }
 
     def create_rectangular_pattern(
         self,
@@ -1114,8 +1318,79 @@ class SketchActionLibrary:
         row_spacing: float,
         col_spacing: float,
     ) -> Dict[str, Any]:
-        """Placeholder for rectangular pattern"""
-        return {"status": "not_implemented", "operation": "create_rectangular_pattern"}
+        """
+        Create a rectangular pattern by duplicating geometry across rows and columns.
+
+        Geometry types supported: LineSegment, Circle, ArcOfCircle, Point
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        if rows < 1 or cols < 1:
+            raise ValueError("rows and cols must be >= 1")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        new_ids: List[int] = []
+
+        def translate_vec(v: App.Vector, dx: float, dy: float) -> App.Vector:
+            return App.Vector(v.x + dx, v.y + dy, 0)
+
+        for gid in geometry_ids:
+            geom = sketch.Geometry[gid]
+            for r in range(rows):
+                for c in range(cols):
+                    if r == 0 and c == 0:
+                        continue  # skip original position
+                    dx = c * col_spacing
+                    dy = r * row_spacing
+                    if geom.__class__.__name__ == "LineSegment":
+                        g = Part.LineSegment(
+                            translate_vec(geom.StartPoint, dx, dy),
+                            translate_vec(geom.EndPoint, dx, dy),
+                        )
+                        nid = sketch.addGeometry(g)
+                        new_ids.append(nid)
+                    elif geom.__class__.__name__ == "Circle":
+                        g = Part.Circle(
+                            translate_vec(geom.Center, dx, dy),
+                            App.Vector(0, 0, 1),
+                            geom.Radius,
+                        )
+                        nid = sketch.addGeometry(g)
+                        new_ids.append(nid)
+                    elif geom.__class__.__name__ == "ArcOfCircle":
+                        circ = Part.Circle(
+                            translate_vec(geom.Center, dx, dy),
+                            App.Vector(0, 0, 1),
+                            geom.Radius,
+                        )
+                        g = Part.ArcOfCircle(
+                            circ, geom.FirstParameter, geom.LastParameter
+                        )
+                        nid = sketch.addGeometry(g)
+                        new_ids.append(nid)
+                    elif geom.__class__.__name__ == "Point":
+                        g = Part.Point(translate_vec(geom.X, dx, dy))
+                        nid = sketch.addGeometry(g)
+                        new_ids.append(nid)
+
+        sketch.solve()
+        doc.recompute()
+        self.modified_sketches.append(sketch_name)
+
+        return {
+            "sketch_name": sketch_name,
+            "created_geometry_ids": new_ids,
+            "pattern_type": "rectangular",
+            "rows": rows,
+            "cols": cols,
+            "row_spacing": row_spacing,
+            "col_spacing": col_spacing,
+        }
 
     def create_polar_pattern(
         self,
@@ -1125,8 +1400,78 @@ class SketchActionLibrary:
         count: int,
         angle: float,
     ) -> Dict[str, Any]:
-        """Placeholder for polar pattern"""
-        return {"status": "not_implemented", "operation": "create_polar_pattern"}
+        """
+        Create a polar pattern by rotating geometry around a center point.
+
+        Args:
+            center: Rotation center (x, y)
+            count: Number of instances (>= 2)
+            angle: Total angle in degrees (360 for full circle)
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        if count < 2:
+            raise ValueError("count must be >= 2")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        cx, cy = center
+        step = angle / count
+        new_ids: List[int] = []
+
+        def rotate_point(v: App.Vector, deg: float) -> App.Vector:
+            rad = math.radians(deg)
+            x = v.x - cx
+            y = v.y - cy
+            xr = x * math.cos(rad) - y * math.sin(rad)
+            yr = x * math.sin(rad) + y * math.cos(rad)
+            return App.Vector(xr + cx, yr + cy, 0)
+
+        for gid in geometry_ids:
+            geom = sketch.Geometry[gid]
+            for i in range(1, count):
+                deg = i * step
+                if geom.__class__.__name__ == "LineSegment":
+                    g = Part.LineSegment(
+                        rotate_point(geom.StartPoint, deg),
+                        rotate_point(geom.EndPoint, deg),
+                    )
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+                elif geom.__class__.__name__ == "Circle":
+                    g = Part.Circle(
+                        rotate_point(geom.Center, deg), App.Vector(0, 0, 1), geom.Radius
+                    )
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+                elif geom.__class__.__name__ == "ArcOfCircle":
+                    circ = Part.Circle(
+                        rotate_point(geom.Center, deg), App.Vector(0, 0, 1), geom.Radius
+                    )
+                    g = Part.ArcOfCircle(circ, geom.FirstParameter, geom.LastParameter)
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+                elif geom.__class__.__name__ == "Point":
+                    g = Part.Point(rotate_point(geom.X, deg))
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+
+        sketch.solve()
+        doc.recompute()
+        self.modified_sketches.append(sketch_name)
+
+        return {
+            "sketch_name": sketch_name,
+            "created_geometry_ids": new_ids,
+            "pattern_type": "polar",
+            "center": center,
+            "count": count,
+            "angle": angle,
+        }
 
     def create_linear_pattern(
         self,
@@ -1136,8 +1481,72 @@ class SketchActionLibrary:
         count: int,
         spacing: float,
     ) -> Dict[str, Any]:
-        """Placeholder for linear pattern"""
-        return {"status": "not_implemented", "operation": "create_linear_pattern"}
+        """
+        Create a linear pattern along a direction vector.
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        if count < 2:
+            raise ValueError("count must be >= 2")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        dx, dy = direction
+        mag = math.hypot(dx, dy)
+        if mag <= 0:
+            raise ValueError("direction vector must be non-zero")
+        ux, uy = dx / mag, dy / mag
+        step_dx, step_dy = ux * spacing, uy * spacing
+
+        new_ids: List[int] = []
+
+        def translate_vec(v: App.Vector, k: int) -> App.Vector:
+            return App.Vector(v.x + step_dx * k, v.y + step_dy * k, 0)
+
+        for gid in geometry_ids:
+            geom = sketch.Geometry[gid]
+            for i in range(1, count):
+                if geom.__class__.__name__ == "LineSegment":
+                    g = Part.LineSegment(
+                        translate_vec(geom.StartPoint, i),
+                        translate_vec(geom.EndPoint, i),
+                    )
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+                elif geom.__class__.__name__ == "Circle":
+                    g = Part.Circle(
+                        translate_vec(geom.Center, i), App.Vector(0, 0, 1), geom.Radius
+                    )
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+                elif geom.__class__.__name__ == "ArcOfCircle":
+                    circ = Part.Circle(
+                        translate_vec(geom.Center, i), App.Vector(0, 0, 1), geom.Radius
+                    )
+                    g = Part.ArcOfCircle(circ, geom.FirstParameter, geom.LastParameter)
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+                elif geom.__class__.__name__ == "Point":
+                    g = Part.Point(translate_vec(geom.X, i))
+                    nid = sketch.addGeometry(g)
+                    new_ids.append(nid)
+
+        sketch.solve()
+        doc.recompute()
+        self.modified_sketches.append(sketch_name)
+
+        return {
+            "sketch_name": sketch_name,
+            "created_geometry_ids": new_ids,
+            "pattern_type": "linear",
+            "direction": direction,
+            "count": count,
+            "spacing": spacing,
+        }
 
     def add_point(
         self,

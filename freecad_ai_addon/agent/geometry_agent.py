@@ -60,6 +60,13 @@ class GeometryAgent(BaseAgent):
             "boolean_intersection": self._boolean_intersection,
             "add_fillet": self._add_fillet,
             "add_chamfer": self._add_chamfer,
+            # Transformations and arrays
+            "mirror_object": self._mirror_object,
+            "array_linear": self._array_linear,
+            "array_polar": self._array_polar,
+            "scale_object": self._scale_object,
+            "rotate_object": self._rotate_object,
+            "translate_object": self._translate_object,
         }
 
     def can_handle_task(self, task: AgentTask) -> bool:
@@ -82,24 +89,86 @@ class GeometryAgent(BaseAgent):
         # Validate operation-specific parameters
         if operation == "create_box":
             required = ["length", "width", "height"]
-            return all(param in parameters for param in required)
+            if not all(param in parameters for param in required):
+                return False
+            # Dimensions must be positive
+            return all(
+                isinstance(parameters[p], (int, float)) and parameters[p] > 0
+                for p in required
+            )
 
         elif operation == "create_cylinder":
             required = ["radius", "height"]
-            return all(param in parameters for param in required)
+            if not all(param in parameters for param in required):
+                return False
+            return all(
+                isinstance(parameters[p], (int, float)) and parameters[p] > 0
+                for p in required
+            )
 
         elif operation == "create_sphere":
-            return "radius" in parameters
+            return (
+                "radius" in parameters
+                and isinstance(parameters["radius"], (int, float))
+                and parameters["radius"] > 0
+            )
 
         elif operation in [
             "boolean_union",
             "boolean_difference",
             "boolean_intersection",
         ]:
-            return "objects" in parameters and len(parameters["objects"]) >= 2
+            # boolean_difference uses base_object + tool_objects; others use objects list
+            if operation == "boolean_difference":
+                return (
+                    "base_object" in parameters
+                    and "tool_objects" in parameters
+                    and isinstance(parameters["tool_objects"], list)
+                    and len(parameters["tool_objects"]) >= 1
+                )
+            return (
+                "objects" in parameters
+                and isinstance(parameters["objects"], list)
+                and len(parameters["objects"]) >= 2
+            )
 
         elif operation in ["add_fillet", "add_chamfer"]:
-            return "object" in parameters and "radius" in parameters
+            return (
+                "object" in parameters
+                and "radius" in parameters
+                and isinstance(parameters["radius"], (int, float))
+                and parameters["radius"] > 0
+            )
+
+        elif operation == "mirror_object":
+            return "object" in parameters and "plane" in parameters
+
+        elif operation == "array_linear":
+            return (
+                "object" in parameters
+                and "direction" in parameters
+                and "count" in parameters
+                and "spacing" in parameters
+            )
+
+        elif operation == "array_polar":
+            return (
+                "object" in parameters
+                and "count" in parameters
+                and isinstance(parameters["count"], int)
+                and parameters["count"] >= 2
+            )
+
+        elif operation == "scale_object":
+            return "object" in parameters and (
+                "scale_factor" in parameters or "scale_vector" in parameters
+            )
+
+        elif operation == "rotate_object":
+            return "object" in parameters and "angle" in parameters
+
+        elif operation == "translate_object":
+            return "object" in parameters and "translation" in parameters
 
         # Add more validation as needed
         return True
@@ -330,12 +399,16 @@ class GeometryAgent(BaseAgent):
         # Create boolean union
         union = doc.addObject("Part::MultiFuse", name)
         union.Shapes = obj_refs
+        doc.recompute()
+
+        # Guard against invalid/empty results
+        volume = getattr(getattr(union, "Shape", None), "Volume", None)
 
         return {
             "created_objects": [union.Name],
             "object": union,
             "input_objects": objects,
-            "volume": union.Shape.Volume,
+            "volume": volume,
         }
 
     def _boolean_difference(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -350,24 +423,30 @@ class GeometryAgent(BaseAgent):
         if not base:
             raise ValueError(f"Base object {base_object} not found")
 
-        tools = []
-        for tool_name in tool_objects:
+        # Chain cuts for multiple tools
+        current = base
+        for idx, tool_name in enumerate(tool_objects):
             tool = doc.getObject(tool_name)
             if not tool:
                 raise ValueError(f"Tool object {tool_name} not found")
-            tools.append(tool)
+            stage_name = (
+                name if idx == len(tool_objects) - 1 else f"{name}_stage{idx+1}"
+            )
+            cut = doc.addObject("Part::Cut", stage_name)
+            cut.Base = current
+            cut.Tool = tool
+            current = cut
 
-        # Create boolean difference
-        difference = doc.addObject("Part::Cut", name)
-        difference.Base = base
-        difference.Tool = tools[0] if len(tools) == 1 else tools
+        doc.recompute()
+
+        volume = getattr(getattr(current, "Shape", None), "Volume", None)
 
         return {
-            "created_objects": [difference.Name],
-            "object": difference,
+            "created_objects": [current.Name],
+            "object": current,
             "base_object": base_object,
             "tool_objects": tool_objects,
-            "volume": difference.Shape.Volume,
+            "volume": volume,
         }
 
     def _boolean_intersection(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -391,12 +470,15 @@ class GeometryAgent(BaseAgent):
         # Create boolean intersection
         intersection = doc.addObject("Part::MultiCommon", name)
         intersection.Shapes = obj_refs
+        doc.recompute()
+
+        volume = getattr(getattr(intersection, "Shape", None), "Volume", None)
 
         return {
             "created_objects": [intersection.Name],
             "object": intersection,
             "input_objects": objects,
-            "volume": intersection.Shape.Volume,
+            "volume": volume,
         }
 
     def _add_fillet(self, params: Dict[str, Any]) -> Dict[str, Any]:
