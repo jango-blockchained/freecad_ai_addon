@@ -293,6 +293,64 @@ class TestAdvancedSketchPatterns:
         assert result["pattern_type"] == "rectangular"
         assert len(result["created_geometry_ids"]) > 0
 
+    @patch("freecad_ai_addon.agent.sketch_action_library.App")
+    def test_polar_pattern_flow_with_mock(self, mock_app):
+        """Validate polar pattern flow with mocked FreeCAD sketch."""
+        from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+
+        class GCircle:
+            __name__ = "Circle"
+
+            def __init__(self):
+                self.Center = type("V", (), {"x": 0.0, "y": 0.0})()
+                self.Radius = 5.0
+
+            @property
+            def __class__(self):
+                return type("C", (), {"__name__": "Circle"})
+
+        mock_doc = Mock()
+        mock_sketch = Mock()
+        mock_app.ActiveDocument = mock_doc
+        mock_doc.getObject.return_value = mock_sketch
+        mock_sketch.Geometry = [GCircle()]
+        mock_sketch.addGeometry.side_effect = lambda *a, **k: 1
+
+        lib = SketchActionLibrary()
+        result = lib.create_polar_pattern("Sketch", [0], (0.0, 0.0), 6, 360.0)
+        assert result["pattern_type"] == "polar"
+        assert len(result["created_geometry_ids"]) > 0
+
+    @patch("freecad_ai_addon.agent.sketch_action_library.App")
+    def test_linear_pattern_flow_with_mock(self, mock_app):
+        """Validate linear pattern flow with mocked FreeCAD sketch."""
+        from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+
+        class GArc:
+            __name__ = "ArcOfCircle"
+
+            def __init__(self):
+                self.Center = type("V", (), {"x": 0.0, "y": 0.0})()
+                self.Radius = 5.0
+                self.FirstParameter = 0.0
+                self.LastParameter = 1.0
+
+            @property
+            def __class__(self):
+                return type("C", (), {"__name__": "ArcOfCircle"})
+
+        mock_doc = Mock()
+        mock_sketch = Mock()
+        mock_app.ActiveDocument = mock_doc
+        mock_doc.getObject.return_value = mock_sketch
+        mock_sketch.Geometry = [GArc()]
+        mock_sketch.addGeometry.side_effect = lambda *a, **k: 1
+
+        lib = SketchActionLibrary()
+        result = lib.create_linear_pattern("Sketch", [0], (1.0, 0.0), 4, 10.0)
+        assert result["pattern_type"] == "linear"
+        assert len(result["created_geometry_ids"]) > 0
+
     @patch("freecad_ai_addon.agent.advanced_sketch_patterns.App")
     def test_parametric_sketch_creation(self, mock_app):
         """Test parametric sketch creation."""

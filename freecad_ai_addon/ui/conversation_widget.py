@@ -747,6 +747,9 @@ class ConversationWidget(QWidget):
         action_angle = constraints_menu.addAction("Add Angle…")
         action_angle.triggered.connect(self._quick_add_angle)
 
+        action_symmetric = constraints_menu.addAction("Add Symmetric…")
+        action_symmetric.triggered.connect(self._quick_add_symmetric)
+
         tools_btn.setMenu(tools_menu)
         layout.addWidget(tools_btn)
 
@@ -1280,6 +1283,47 @@ class ConversationWidget(QWidget):
                 self.add_error_message("Failed to add angle constraint")
         except Exception as e:
             self.add_error_message(f"Add angle error: {e}")
+
+    def _quick_add_symmetric(self):
+        """Prompt for two geometries and a symmetry line, add symmetric constraint."""
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+        except Exception as e:
+            self.add_error_message(f"SketchActionLibrary unavailable: {e}")
+            return
+
+        sketch_name, ok0 = QInputDialog.getText(self, "Add Symmetric", "Sketch name:")
+        if not ok0 or not sketch_name:
+            return
+        gid1, ok1 = QInputDialog.getInt(self, "Add Symmetric", "Geometry 1 ID:", 0, 0)
+        if not ok1:
+            return
+        gid2, ok2 = QInputDialog.getInt(self, "Add Symmetric", "Geometry 2 ID:", 1, 0)
+        if not ok2:
+            return
+        line_id, ok3 = QInputDialog.getInt(
+            self, "Add Symmetric", "Symmetry Line Geometry ID:", 2, 0
+        )
+        if not ok3:
+            return
+
+        try:
+            lib = SketchActionLibrary()
+            result = lib.add_symmetric_constraint(sketch_name, gid1, gid2, line_id)
+            cid = result.get("constraint_id")
+            if cid is not None:
+                self.add_system_message(
+                    f"Symmetric constraint added in {sketch_name}: g{gid1} ↔ g{gid2} about line {line_id} (id {cid})"
+                )
+            else:
+                self.add_error_message("Failed to add symmetric constraint")
+        except Exception as e:
+            self.add_error_message(f"Add symmetric error: {e}")
 
     def get_conversation_history(self) -> List[ChatMessage]:
         """Get the current conversation history"""
