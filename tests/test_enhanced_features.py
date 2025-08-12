@@ -234,6 +234,65 @@ class TestAdvancedSketchPatterns:
         ]:
             assert op in agent.supported_operations
 
+    @patch("freecad_ai_addon.agent.sketch_action_library.App")
+    def test_sketch_slot_flow_with_mock(self, mock_app):
+        """Validate add_slot flow with mocked FreeCAD document/sketch."""
+        from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+
+        # Mock FreeCAD document and sketch
+        mock_doc = Mock()
+        mock_sketch = Mock()
+        mock_app.ActiveDocument = mock_doc
+        mock_doc.getObject.return_value = mock_sketch
+
+        # Geometry adders return incremental ids
+        ids = {"next": 0}
+
+        def add_geometry_side_effect(obj):
+            nid = ids["next"]
+            ids["next"] += 1
+            return nid
+
+        mock_sketch.addGeometry.side_effect = add_geometry_side_effect
+        mock_sketch.addConstraint.side_effect = lambda *args, **kwargs: 99
+
+        lib = SketchActionLibrary()
+        result = lib.add_slot("Sketch", (0.0, 0.0), (40.0, 0.0), 10.0)
+
+        assert result["geometry_type"] == "Slot"
+        # Expect 4 geometry elements: 2 lines + 2 arcs
+        assert len(result["geometry_ids"]) == 4
+        assert len(result["constraint_ids"]) >= 5  # 4 coincident + 1 parallel
+
+    @patch("freecad_ai_addon.agent.sketch_action_library.App")
+    def test_rectangular_pattern_flow_with_mock(self, mock_app):
+        """Validate rectangular pattern flow with mocked FreeCAD sketch."""
+        from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+
+        # Mock geometry container with minimal attributes
+        class GLine:
+            __name__ = "LineSegment"
+
+            def __init__(self):
+                self.StartPoint = type("V", (), {"x": 0.0, "y": 0.0})()
+                self.EndPoint = type("V", (), {"x": 10.0, "y": 0.0})()
+
+            @property
+            def __class__(self):
+                return type("C", (), {"__name__": "LineSegment"})
+
+        mock_doc = Mock()
+        mock_sketch = Mock()
+        mock_app.ActiveDocument = mock_doc
+        mock_doc.getObject.return_value = mock_sketch
+        mock_sketch.Geometry = [GLine()]
+        mock_sketch.addGeometry.side_effect = lambda *a, **k: 1
+
+        lib = SketchActionLibrary()
+        result = lib.create_rectangular_pattern("Sketch", [0], 2, 2, 5.0, 5.0)
+        assert result["pattern_type"] == "rectangular"
+        assert len(result["created_geometry_ids"]) > 0
+
     @patch("freecad_ai_addon.agent.advanced_sketch_patterns.App")
     def test_parametric_sketch_creation(self, mock_app):
         """Test parametric sketch creation."""

@@ -739,6 +739,14 @@ class ConversationWidget(QWidget):
         action_linear_pattern = sketch_menu.addAction("Linear Pattern…")
         action_linear_pattern.triggered.connect(self._quick_linear_pattern)
 
+        # Constraints submenu
+        constraints_menu = tools_menu.addMenu("Constraints")
+        action_coincident = constraints_menu.addAction("Add Coincident…")
+        action_coincident.triggered.connect(self._quick_add_coincident)
+
+        action_angle = constraints_menu.addAction("Add Angle…")
+        action_angle.triggered.connect(self._quick_add_angle)
+
         tools_btn.setMenu(tools_menu)
         layout.addWidget(tools_btn)
 
@@ -1176,6 +1184,102 @@ class ConversationWidget(QWidget):
             )
         except Exception as e:
             self.add_error_message(f"Linear pattern error: {e}")
+
+    def _quick_add_coincident(self):
+        """Prompt for two geometry refs and add a coincident constraint."""
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+        except Exception as e:
+            self.add_error_message(f"SketchActionLibrary unavailable: {e}")
+            return
+
+        sketch_name, ok0 = QInputDialog.getText(self, "Add Coincident", "Sketch name:")
+        if not ok0 or not sketch_name:
+            return
+
+        gid1, ok1 = QInputDialog.getInt(self, "Add Coincident", "Geometry 1 ID:", 0, 0)
+        if not ok1:
+            return
+        pos1, ok2 = QInputDialog.getInt(
+            self,
+            "Add Coincident",
+            "Point on Geometry 1 (1=start,2=end,3=center):",
+            1,
+            1,
+            3,
+        )
+        if not ok2:
+            return
+        gid2, ok3 = QInputDialog.getInt(self, "Add Coincident", "Geometry 2 ID:", 1, 0)
+        if not ok3:
+            return
+        pos2, ok4 = QInputDialog.getInt(
+            self,
+            "Add Coincident",
+            "Point on Geometry 2 (1=start,2=end,3=center):",
+            1,
+            1,
+            3,
+        )
+        if not ok4:
+            return
+
+        try:
+            lib = SketchActionLibrary()
+            result = lib.add_coincident_constraint(sketch_name, gid1, pos1, gid2, pos2)
+            cid = result.get("constraint_id")
+            if cid is not None:
+                self.add_system_message(
+                    f"Coincident added in {sketch_name}: g{gid1}@{pos1} ↔ g{gid2}@{pos2} (id {cid})"
+                )
+            else:
+                self.add_error_message("Failed to add coincident constraint")
+        except Exception as e:
+            self.add_error_message(f"Add coincident error: {e}")
+
+    def _quick_add_angle(self):
+        """Prompt for two lines and add an angle constraint."""
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+        except Exception as e:
+            self.add_error_message(f"SketchActionLibrary unavailable: {e}")
+            return
+
+        sketch_name, ok0 = QInputDialog.getText(self, "Add Angle", "Sketch name:")
+        if not ok0 or not sketch_name:
+            return
+        gid1, ok1 = QInputDialog.getInt(self, "Add Angle", "Line 1 Geometry ID:", 0, 0)
+        if not ok1:
+            return
+        gid2, ok2 = QInputDialog.getInt(self, "Add Angle", "Line 2 Geometry ID:", 1, 0)
+        if not ok2:
+            return
+        angle, ok3 = QInputDialog.getDouble(self, "Add Angle", "Angle (degrees):", 90.0)
+        if not ok3:
+            return
+
+        try:
+            lib = SketchActionLibrary()
+            result = lib.add_angle_constraint(sketch_name, gid1, gid2, angle)
+            cid = result.get("constraint_id")
+            if cid is not None:
+                self.add_system_message(
+                    f"Angle constraint added in {sketch_name}: lines {gid1},{gid2} = {angle}° (id {cid})"
+                )
+            else:
+                self.add_error_message("Failed to add angle constraint")
+        except Exception as e:
+            self.add_error_message(f"Add angle error: {e}")
 
     def get_conversation_history(self) -> List[ChatMessage]:
         """Get the current conversation history"""
