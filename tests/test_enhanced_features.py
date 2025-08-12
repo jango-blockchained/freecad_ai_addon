@@ -208,6 +208,32 @@ class TestAdvancedSketchPatterns:
         # Square layout should create 4 holes (2x2)
         assert len(result["geometry"]) >= 4
 
+    def test_sketch_slot_and_patterns_api_presence(self):
+        """Ensure SketchActionLibrary exposes slot and pattern functions."""
+        from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+
+        lib = SketchActionLibrary()
+        ops = lib.sketch_operations
+        assert "add_slot" in ops
+        assert "rectangular_pattern" in ops
+        assert "polar_pattern" in ops
+        assert "linear_pattern" in ops
+
+    def test_geometry_agent_operations_registry(self):
+        """Verify geometry agent supports new transformation operations."""
+        from freecad_ai_addon.agent.geometry_agent import GeometryAgent
+
+        agent = GeometryAgent()
+        for op in [
+            "mirror_object",
+            "array_linear",
+            "array_polar",
+            "scale_object",
+            "rotate_object",
+            "translate_object",
+        ]:
+            assert op in agent.supported_operations
+
     @patch("freecad_ai_addon.agent.advanced_sketch_patterns.App")
     def test_parametric_sketch_creation(self, mock_app):
         """Test parametric sketch creation."""

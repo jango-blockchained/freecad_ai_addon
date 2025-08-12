@@ -707,6 +707,41 @@ class ConversationWidget(QWidget):
         export_btn.clicked.connect(self._export_conversation)
         layout.addWidget(export_btn)
 
+        # Tools menu (Sketch/Geometry quick actions)
+        tools_btn = QToolButton()
+        tools_btn.setText("🛠")
+        tools_btn.setToolTip("Quick CAD tools")
+        tools_btn.setPopupMode(QToolButton.InstantPopup)
+
+        try:
+            from PySide6.QtWidgets import QMenu  # type: ignore
+        except Exception:  # PySide2 fallback
+            from PySide2.QtWidgets import QMenu  # type: ignore
+
+        tools_menu = QMenu(tools_btn)
+
+        # Geometry submenu
+        geom_menu = tools_menu.addMenu("Geometry")
+        action_create_box = geom_menu.addAction("Create Box…")
+        action_create_box.triggered.connect(self._quick_create_box)
+
+        # Sketch submenu
+        sketch_menu = tools_menu.addMenu("Sketch")
+        action_add_slot = sketch_menu.addAction("Add Slot…")
+        action_add_slot.triggered.connect(self._quick_add_slot)
+
+        action_rect_pattern = sketch_menu.addAction("Rectangular Pattern…")
+        action_rect_pattern.triggered.connect(self._quick_rectangular_pattern)
+
+        action_polar_pattern = sketch_menu.addAction("Polar Pattern…")
+        action_polar_pattern.triggered.connect(self._quick_polar_pattern)
+
+        action_linear_pattern = sketch_menu.addAction("Linear Pattern…")
+        action_linear_pattern.triggered.connect(self._quick_linear_pattern)
+
+        tools_btn.setMenu(tools_menu)
+        layout.addWidget(tools_btn)
+
         return toolbar
 
     def _connect_signals(self):
@@ -892,6 +927,255 @@ class ConversationWidget(QWidget):
                 if message.attachments:
                     f.write(f"Attachments: {', '.join(message.attachments)}\n")
                 f.write("\n")
+
+    # ==============================
+    # Quick CAD Tools (Geometry)
+    # ==============================
+
+    def _quick_create_box(self):
+        """Prompt for dimensions and create a box via ActionLibrary."""
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.action_library import ActionLibrary
+        except Exception as e:
+            self.add_error_message(f"ActionLibrary unavailable: {e}")
+            return
+
+        # Gather parameters
+        length, ok1 = QInputDialog.getDouble(
+            self, "Create Box", "Length (mm):", 50.0, 0.01
+        )
+        if not ok1:
+            return
+        width, ok2 = QInputDialog.getDouble(
+            self, "Create Box", "Width (mm):", 30.0, 0.01
+        )
+        if not ok2:
+            return
+        height, ok3 = QInputDialog.getDouble(
+            self, "Create Box", "Height (mm):", 20.0, 0.01
+        )
+        if not ok3:
+            return
+
+        try:
+            lib = ActionLibrary()
+            result = lib.execute_operation(
+                "box",
+                {
+                    "length": length,
+                    "width": width,
+                    "height": height,
+                    "name": "BoxFromUI",
+                },
+            )
+            status = result.get("status")
+            if status == "success":
+                self.add_system_message(
+                    f"Created box: {result['result'].get('object_name', 'Box')} ({length}×{width}×{height})"
+                )
+            else:
+                self.add_error_message(
+                    f"Box creation failed: {result.get('error', 'Unknown error')}"
+                )
+        except Exception as e:
+            self.add_error_message(f"Box creation error: {e}")
+
+    # ==============================
+    # Quick CAD Tools (Sketch)
+    # ==============================
+
+    def _quick_add_slot(self):
+        """Prompt and add a slot to a sketch via SketchActionLibrary."""
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+        except Exception as e:
+            self.add_error_message(f"SketchActionLibrary unavailable: {e}")
+            return
+
+        sketch_name, ok0 = QInputDialog.getText(self, "Add Slot", "Sketch name:")
+        if not ok0 or not sketch_name:
+            return
+        x1, ok1 = QInputDialog.getDouble(self, "Add Slot", "Start X:", 0.0)
+        if not ok1:
+            return
+        y1, ok2 = QInputDialog.getDouble(self, "Add Slot", "Start Y:", 0.0)
+        if not ok2:
+            return
+        x2, ok3 = QInputDialog.getDouble(self, "Add Slot", "End X:", 50.0)
+        if not ok3:
+            return
+        y2, ok4 = QInputDialog.getDouble(self, "Add Slot", "End Y:", 0.0)
+        if not ok4:
+            return
+        width, ok5 = QInputDialog.getDouble(self, "Add Slot", "Width (mm):", 10.0, 0.01)
+        if not ok5:
+            return
+
+        try:
+            lib = SketchActionLibrary()
+            result = lib.add_slot(sketch_name, (x1, y1), (x2, y2), width)
+            if result.get("geometry_type") == "Slot":
+                self.add_system_message(
+                    f"Added slot to {sketch_name}: start=({x1},{y1}), end=({x2},{y2}), width={width}"
+                )
+            else:
+                self.add_error_message("Failed to add slot (unexpected result)")
+        except Exception as e:
+            self.add_error_message(f"Add slot error: {e}")
+
+    def _quick_rectangular_pattern(self):
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+        except Exception as e:
+            self.add_error_message(f"SketchActionLibrary unavailable: {e}")
+            return
+
+        sketch_name, ok0 = QInputDialog.getText(
+            self, "Rectangular Pattern", "Sketch name:"
+        )
+        if not ok0 or not sketch_name:
+            return
+        gids_text, ok1 = QInputDialog.getText(
+            self, "Rectangular Pattern", "Geometry IDs (comma-separated):"
+        )
+        if not ok1 or not gids_text.strip():
+            return
+        rows, ok2 = QInputDialog.getInt(self, "Rectangular Pattern", "Rows:", 2, 1)
+        if not ok2:
+            return
+        cols, ok3 = QInputDialog.getInt(self, "Rectangular Pattern", "Columns:", 3, 1)
+        if not ok3:
+            return
+        row_sp, ok4 = QInputDialog.getDouble(
+            self, "Rectangular Pattern", "Row spacing:", 20.0
+        )
+        if not ok4:
+            return
+        col_sp, ok5 = QInputDialog.getDouble(
+            self, "Rectangular Pattern", "Col spacing:", 20.0
+        )
+        if not ok5:
+            return
+
+        try:
+            gids = [int(s.strip()) for s in gids_text.split(",") if s.strip()]
+            lib = SketchActionLibrary()
+            result = lib.create_rectangular_pattern(
+                sketch_name, gids, rows, cols, row_sp, col_sp
+            )
+            created = len(result.get("created_geometry_ids", []))
+            self.add_system_message(
+                f"Rectangular pattern created in {sketch_name}: {created} new elements ({rows}x{cols})."
+            )
+        except Exception as e:
+            self.add_error_message(f"Rectangular pattern error: {e}")
+
+    def _quick_polar_pattern(self):
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+        except Exception as e:
+            self.add_error_message(f"SketchActionLibrary unavailable: {e}")
+            return
+
+        sketch_name, ok0 = QInputDialog.getText(self, "Polar Pattern", "Sketch name:")
+        if not ok0 or not sketch_name:
+            return
+        gids_text, ok1 = QInputDialog.getText(
+            self, "Polar Pattern", "Geometry IDs (comma-separated):"
+        )
+        if not ok1 or not gids_text.strip():
+            return
+        cx, ok2 = QInputDialog.getDouble(self, "Polar Pattern", "Center X:", 0.0)
+        if not ok2:
+            return
+        cy, ok3 = QInputDialog.getDouble(self, "Polar Pattern", "Center Y:", 0.0)
+        if not ok3:
+            return
+        count, ok4 = QInputDialog.getInt(self, "Polar Pattern", "Count:", 6, 2)
+        if not ok4:
+            return
+        angle, ok5 = QInputDialog.getDouble(
+            self, "Polar Pattern", "Total Angle (deg):", 360.0
+        )
+        if not ok5:
+            return
+
+        try:
+            gids = [int(s.strip()) for s in gids_text.split(",") if s.strip()]
+            lib = SketchActionLibrary()
+            result = lib.create_polar_pattern(sketch_name, gids, (cx, cy), count, angle)
+            created = len(result.get("created_geometry_ids", []))
+            self.add_system_message(
+                f"Polar pattern created in {sketch_name}: {created} new elements around ({cx},{cy})."
+            )
+        except Exception as e:
+            self.add_error_message(f"Polar pattern error: {e}")
+
+    def _quick_linear_pattern(self):
+        try:
+            from PySide6.QtWidgets import QInputDialog  # type: ignore
+        except Exception:
+            from PySide2.QtWidgets import QInputDialog  # type: ignore
+
+        try:
+            from freecad_ai_addon.agent.sketch_action_library import SketchActionLibrary
+        except Exception as e:
+            self.add_error_message(f"SketchActionLibrary unavailable: {e}")
+            return
+
+        sketch_name, ok0 = QInputDialog.getText(self, "Linear Pattern", "Sketch name:")
+        if not ok0 or not sketch_name:
+            return
+        gids_text, ok1 = QInputDialog.getText(
+            self, "Linear Pattern", "Geometry IDs (comma-separated):"
+        )
+        if not ok1 or not gids_text.strip():
+            return
+        dx, ok2 = QInputDialog.getDouble(self, "Linear Pattern", "Direction X:", 1.0)
+        if not ok2:
+            return
+        dy, ok3 = QInputDialog.getDouble(self, "Linear Pattern", "Direction Y:", 0.0)
+        if not ok3:
+            return
+        count, ok4 = QInputDialog.getInt(self, "Linear Pattern", "Count:", 3, 2)
+        if not ok4:
+            return
+        spacing, ok5 = QInputDialog.getDouble(self, "Linear Pattern", "Spacing:", 20.0)
+        if not ok5:
+            return
+
+        try:
+            gids = [int(s.strip()) for s in gids_text.split(",") if s.strip()]
+            lib = SketchActionLibrary()
+            result = lib.create_linear_pattern(
+                sketch_name, gids, (dx, dy), count, spacing
+            )
+            created = len(result.get("created_geometry_ids", []))
+            self.add_system_message(
+                f"Linear pattern created in {sketch_name}: {created} new elements along ({dx},{dy})."
+            )
+        except Exception as e:
+            self.add_error_message(f"Linear pattern error: {e}")
 
     def get_conversation_history(self) -> List[ChatMessage]:
         """Get the current conversation history"""
