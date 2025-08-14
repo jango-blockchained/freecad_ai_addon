@@ -6,7 +6,7 @@ and manufacturing analysis capabilities.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import sys
 import os
 
@@ -231,6 +231,11 @@ class TestAdvancedSketchPatterns:
             "scale_object",
             "rotate_object",
             "translate_object",
+            # Newly added advanced feature operations
+            "extrude_from_sketch",
+            "pocket_from_sketch",
+            "loft_profiles",
+            "sweep_profile",
         ]:
             assert op in agent.supported_operations
 

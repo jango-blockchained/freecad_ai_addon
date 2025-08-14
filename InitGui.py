@@ -243,6 +243,47 @@ class AIWorkbench(BaseWorkbench):
             except Exception as e:
                 self._print(f"AI Workbench: Failed to load manufacturing commands: {e}")
 
+            # Parametric design command (self-registering)
+            try:
+                import freecad_ai_addon.commands.parametric_commands  # noqa: F401
+
+                try:
+                    if hasattr(Gui, "listCommands"):
+                        if "AI_GenerateParametricDesign" in Gui.listCommands():
+                            registered_commands.append("AI_GenerateParametricDesign")
+                    else:
+                        registered_commands.append("AI_GenerateParametricDesign")
+                except Exception:
+                    pass
+            except Exception as e:
+                self._print(f"AI Workbench: Failed to load parametric commands: {e}")
+
+            # Analysis / validation commands
+            try:
+                import freecad_ai_addon.commands.analysis_commands  # noqa: F401
+
+                try:
+                    if hasattr(Gui, "listCommands"):
+                        for _cmd in [
+                            "AI_RunDesignRuleCheck",
+                            "AI_ShowOptimizationSuggestions",
+                            "AI_RecommendSimulationSetup",
+                        ]:
+                            if _cmd in Gui.listCommands():
+                                registered_commands.append(_cmd)
+                    else:
+                        registered_commands.extend(
+                            [
+                                "AI_RunDesignRuleCheck",
+                                "AI_ShowOptimizationSuggestions",
+                                "AI_RecommendSimulationSetup",
+                            ]
+                        )
+                except Exception:  # noqa: BLE001
+                    pass
+            except Exception as e:  # noqa: BLE001
+                self._print(f"AI Workbench: Failed to load analysis commands: {e}")
+
             # Build toolbar/menu only with commands that actually exist
             commands = registered_commands
             try:

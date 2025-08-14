@@ -38,6 +38,9 @@ class AnalysisActionLibrary:
         """Initialize the analysis action library"""
         self.logger = logging.getLogger(f"{__name__}.AnalysisActionLibrary")
         self.analysis_history = []
+        # Caches
+        self._mass_properties_cache: Dict[str, Dict[str, Any]] = {}
+        self._wall_sample_cache: Dict[str, Dict[str, Any]] = {}
 
         # Analysis operation registry
         self.analysis_operations = {
@@ -59,6 +62,7 @@ class AnalysisActionLibrary:
             "draft_angle_analysis": self.analyze_draft_angles,
             "undercut_analysis": self.analyze_undercuts,
             "wall_thickness_analysis": self.analyze_wall_thickness,
+            "sampled_wall_thickness_analysis": self.sampled_wall_thickness_analysis,
             "support_analysis": self.analyze_support_requirements,
             "overhang_analysis": self.analyze_overhangs,
             # Structural analysis
@@ -215,6 +219,13 @@ class AnalysisActionLibrary:
             raise ValueError(f"Object {obj_name} not found or has no shape")
 
         shape = obj.Shape
+        cache_key = f"mass:{obj_name}:{density}:{material}:{getattr(shape, 'HashCode', lambda: 0)()}"
+        cached = self._mass_properties_cache.get(cache_key)
+        if cached:
+            # Return a shallow copy with cache marker
+            out = dict(cached)
+            out["cached"] = True
+            return out
 
         # Volume in mm³, convert to cm³ for mass calculation
         volume_cm3 = shape.Volume / 1000.0
@@ -237,7 +248,7 @@ class AnalysisActionLibrary:
         iyy = (mass_g / 12.0) * (width**2 + depth**2)
         izz = (mass_g / 12.0) * (width**2 + height**2)
 
-        return {
+        result = {
             "object_name": obj_name,
             "material": material,
             "density": density,
@@ -253,6 +264,81 @@ class AnalysisActionLibrary:
                 "units": "g⋅cm²",
             },
         }
+        self._mass_properties_cache[cache_key] = result
+        return result
+
+    def sampled_wall_thickness_analysis(
+        self,
+        obj_name: str,
+        min_thickness: float = 1.0,
+        samples: int = 60,
+    ) -> Dict[str, Any]:
+        """Sample-based wall thickness probe with caching.
+
+        Uses random point sampling and face distance approximations.
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("No active FreeCAD document")
+
+        obj = App.ActiveDocument.getObject(obj_name)
+        if not obj or not hasattr(obj, "Shape"):
+            raise ValueError(f"Object {obj_name} not found or has no shape")
+
+        shape = obj.Shape
+        cache_key = f"wall_sample:{obj_name}:{getattr(shape, 'HashCode', lambda: 0)()}:{samples}:{min_thickness}"
+        cached = self._wall_sample_cache.get(cache_key)
+        if cached:
+            out = dict(cached)
+            out["cached"] = True
+            return out
+
+        bbox = shape.BoundBox
+        import random
+
+        sample_values = []
+        thin_points = []
+        for _ in range(samples):
+            x = bbox.XMin + random.random() * bbox.XLength
+            y = bbox.YMin + random.random() * bbox.YLength
+            z = bbox.ZMin + random.random() * bbox.ZLength
+            pt = App.Vector(x, y, z)
+            dists = []
+            for face in getattr(shape, "Faces", []):
+                try:
+                    dist = face.distToShape(Part.Vertex(pt))[0]
+                    if dist >= 0:
+                        dists.append(dist)
+                except Exception:
+                    continue
+            if dists:
+                t = min(dists) * 2
+                sample_values.append(t)
+                if t < min_thickness:
+                    thin_points.append({"point": (x, y, z), "thickness": t})
+
+        if not sample_values:
+            result = {
+                "object_name": obj_name,
+                "status": "no_samples",
+                "min_thickness": None,
+                "issues": [],
+            }
+            self._wall_sample_cache[cache_key] = result
+            return result
+
+        result = {
+            "object_name": obj_name,
+            "status": "success",
+            "analysis_type": "sampled_wall_thickness",
+            "sample_count": len(sample_values),
+            "min_sampled_thickness": min(sample_values),
+            "max_sampled_thickness": max(sample_values),
+            "average_thickness": sum(sample_values) / len(sample_values),
+            "thin_regions": thin_points,
+            "min_threshold": min_thickness,
+        }
+        self._wall_sample_cache[cache_key] = result
+        return result
 
     def analyze_bounding_geometry(self, obj_name: str) -> Dict[str, Any]:
         """

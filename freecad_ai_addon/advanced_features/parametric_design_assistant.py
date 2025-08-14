@@ -597,20 +597,26 @@ class ParametricDesignAssistant:
         self, constraint: DesignConstraint, parameters: Dict[str, Parameter]
     ) -> bool:
         """Evaluate if a constraint is satisfied."""
+        # Minimal safe evaluator: only allow parameter names, numbers, operators
+        # Supported operators: + - * / <= >= < > == and parentheses
+        expr = constraint.formula
+        # Build a local namespace of parameter values
+        local_vals = {name: p.value for name, p in parameters.items()}
+        # Reject any disallowed characters (very conservative)
+        import re
+
+        if not re.fullmatch(r"[\w\d_\s+\-*/().><=]*", expr):
+            logger.warning(
+                "Constraint '%s' contains disallowed characters", constraint.name
+            )
+            return False
         try:
-            # Simple evaluation for basic constraints
-            if constraint.constraint_type == "minimum":
-                # Extract parameter values for evaluation
-                param_values = {
-                    name: parameters[name].value
-                    for name in constraint.parameters
-                    if name in parameters
-                }
-                # This is a simplified evaluation - in practice, you'd use a proper expression evaluator
-                return True  # Placeholder
-            return True
-        except Exception as e:
-            logger.error(f"Error evaluating constraint {constraint.name}: {e}")
+            result = eval(
+                expr, {"__builtins__": {}}, local_vals
+            )  # nosec: constrained context
+            return bool(result)
+        except Exception as e:  # noqa: BLE001
+            logger.error("Constraint '%s' evaluation failed: %s", constraint.name, e)
             return False
 
     def suggest_improvements(

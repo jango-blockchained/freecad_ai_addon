@@ -1209,7 +1209,24 @@ class IntelligentDecisionEngine:
                     ]
                 )
 
-            # Step 3: Optimize parameters if requested
+            # Step 3: Map desired operations (including newly added advanced ops)
+            desired_ops = request.get("desired_operations", [])
+            if desired_ops:
+                advanced_map = {
+                    "extrude": "extrude_from_sketch",
+                    "pocket": "pocket_from_sketch",
+                    "loft": "loft_profiles",
+                    "sweep": "sweep_profile",
+                }
+                routed = []
+                for op in desired_ops:
+                    routed.append(advanced_map.get(op, op))
+                decision_result["recommended_operations"] = routed
+                decision_result["recommendations"].append(
+                    f"Operation routing: {desired_ops} -> {routed}"
+                )
+
+            # Step 4: Optimize parameters if requested
             optimization_request = request.get("optimization", {})
             if optimization_request:
                 objective = OptimizationGoal(
@@ -1229,7 +1246,7 @@ class IntelligentDecisionEngine:
                         optimization_result.suggestions
                     )
 
-            # Step 4: Validate design
+            # Step 5: Validate design
             material = request.get("material", "steel")
             process = request.get("manufacturing_process", "machining")
 
@@ -1238,7 +1255,7 @@ class IntelligentDecisionEngine:
             )
             decision_result["validation_issues"] = validation_issues
 
-            # Step 5: Generate execution plan
+            # Step 6: Generate execution plan
             execution_plan = self._generate_execution_plan(
                 patterns,
                 optimization_result if "optimization_result" in locals() else None,
@@ -1247,7 +1264,7 @@ class IntelligentDecisionEngine:
             )
             decision_result["execution_plan"] = execution_plan
 
-            # Step 6: Final recommendations
+            # Step 7: Final recommendations
             final_recommendations = self._generate_final_recommendations(
                 patterns, validation_issues, context
             )

@@ -251,6 +251,8 @@ class FeatureRecognitionAI:
         self._detectors: Dict[str, FeatureDetector] = {}
         self.feature_database = self._load_feature_database()
         self.analysis_history: List[AnalysisResult] = []
+        # Simple in-memory cache: key -> AnalysisResult (no persistence)
+        self._cache: Dict[str, AnalysisResult] = {}
         # Register default detectors
         if detectors is None:
             detectors = [MockHoleDetector(), MockFilletDetector()]
@@ -268,14 +270,21 @@ class FeatureRecognitionAI:
         if not overwrite and detector.name in self._detectors:
             raise ValueError(f"Detector '{detector.name}' already registered")
         self._detectors[detector.name] = detector
+        # Invalidate cache because detector set changed
+        self._cache.clear()
 
     def unregister_detector(self, name: str) -> bool:
-        return self._detectors.pop(name, None) is not None
+        removed = self._detectors.pop(name, None) is not None
+        if removed:
+            self._cache.clear()
+        return removed
 
     def list_detectors(self) -> List[str]:
         return sorted(self._detectors.keys())
 
-    def analyze_object(self, object_or_name: Any) -> AnalysisResult:
+    def analyze_object(
+        self, object_or_name: Any, use_cache: bool = True
+    ) -> AnalysisResult:
         """Analyze a FreeCAD object (or name) for geometric features.
 
         Accepts either a FreeCAD object instance (with expected shape attrs) or
@@ -289,6 +298,11 @@ class FeatureRecognitionAI:
 
         if isinstance(object_or_name, str):
             obj_name = object_or_name
+            if use_cache and obj_name in self._cache:
+                cached = self._cache[obj_name]
+                # Return shallow copy with updated history append (avoid mutating original)
+                self.analysis_history.append(cached)
+                return cached
             obj = self._resolve_object_by_name(obj_name)
             if obj is None and not FREECAD_AVAILABLE:
                 # We'll proceed with a mock placeholder object token
@@ -338,7 +352,23 @@ class FeatureRecognitionAI:
         )
 
         self.analysis_history.append(result)
+        if isinstance(object_or_name, str) and use_cache:
+            self._cache[object_or_name] = result
         return result
+
+    # ------------------------------------------------------------------
+    # Cache Management
+    # ------------------------------------------------------------------
+    def invalidate_cache(self, key: Optional[str] = None) -> None:
+        """Invalidate cached analysis results.
+
+        Args:
+            key: object name to invalidate; if None, clear entire cache
+        """
+        if key:
+            self._cache.pop(key, None)
+        else:
+            self._cache.clear()
 
     # ------------------------------------------------------------------
     # Internal helpers

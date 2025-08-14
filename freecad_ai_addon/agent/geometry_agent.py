@@ -10,11 +10,13 @@ try:
     import FreeCAD as App
     import Part
     import Draft
+    import PartDesign  # Optional, used when available
 except ImportError:
     # Mock for testing outside FreeCAD
     App = None
     Part = None
     Draft = None
+    PartDesign = None
 
 from .base_agent import BaseAgent, AgentTask, TaskResult, TaskStatus, TaskType
 from .action_library import ActionLibrary
@@ -55,6 +57,11 @@ class GeometryAgent(BaseAgent):
             "create_sphere": self._create_sphere,
             "create_cone": self._create_cone,
             "create_torus": self._create_torus,
+            # Feature / sketch based creations
+            "extrude_from_sketch": self._extrude_from_sketch,
+            "pocket_from_sketch": self._pocket_from_sketch,
+            "loft_profiles": self._loft_profiles,
+            "sweep_profile": self._sweep_profile,
             "boolean_union": self._boolean_union,
             "boolean_difference": self._boolean_difference,
             "boolean_intersection": self._boolean_intersection,
@@ -169,6 +176,29 @@ class GeometryAgent(BaseAgent):
 
         elif operation == "translate_object":
             return "object" in parameters and "translation" in parameters
+
+        elif operation == "extrude_from_sketch":
+            return (
+                "sketch" in parameters
+                and "length" in parameters
+                and isinstance(parameters.get("length"), (int, float))
+            )
+
+        elif operation == "pocket_from_sketch":
+            return (
+                "sketch" in parameters
+                and "depth" in parameters
+                and isinstance(parameters.get("depth"), (int, float))
+            )
+
+        elif operation == "loft_profiles":
+            return (
+                isinstance(parameters.get("profiles"), list)
+                and len(parameters.get("profiles", [])) >= 2
+            )
+
+        elif operation == "sweep_profile":
+            return "profile" in parameters and "path" in parameters
 
         # Add more validation as needed
         return True
@@ -401,8 +431,30 @@ class GeometryAgent(BaseAgent):
         union.Shapes = obj_refs
         doc.recompute()
 
-        # Guard against invalid/empty results
-        volume = getattr(getattr(union, "Shape", None), "Volume", None)
+        # Safety guard: ensure resulting shape is valid and non-empty
+        shape = getattr(union, "Shape", None)
+        volume = getattr(shape, "Volume", None)
+        if (
+            shape is None
+            or getattr(shape, "isNull", lambda: False)()
+            or volume is None
+            or volume <= 0
+        ):
+            # Attempt fallback: sequential fuse
+            try:
+                prev = obj_refs[0]
+                for idx, nxt in enumerate(obj_refs[1:], start=1):
+                    fuse = doc.addObject("Part::Fuse", f"{name}_seq{idx}")
+                    fuse.Base = prev
+                    fuse.Tool = nxt
+                    doc.recompute()
+                    if getattr(getattr(fuse, "Shape", None), "Volume", 0) <= 0:
+                        raise ValueError("Sequential fuse produced empty shape")
+                    prev = fuse
+                union = prev
+                volume = getattr(getattr(union, "Shape", None), "Volume", None)
+            except Exception as e:
+                raise ValueError(f"Boolean union failed to produce valid shape: {e}")
 
         return {
             "created_objects": [union.Name],
@@ -439,7 +491,15 @@ class GeometryAgent(BaseAgent):
 
         doc.recompute()
 
-        volume = getattr(getattr(current, "Shape", None), "Volume", None)
+        shape = getattr(current, "Shape", None)
+        volume = getattr(shape, "Volume", None)
+        if (
+            shape is None
+            or getattr(shape, "isNull", lambda: False)()
+            or volume is None
+            or volume <= 0
+        ):
+            raise ValueError("Boolean difference produced empty or invalid shape")
 
         return {
             "created_objects": [current.Name],
@@ -472,13 +532,201 @@ class GeometryAgent(BaseAgent):
         intersection.Shapes = obj_refs
         doc.recompute()
 
-        volume = getattr(getattr(intersection, "Shape", None), "Volume", None)
+        shape = getattr(intersection, "Shape", None)
+        volume = getattr(shape, "Volume", None)
+        if (
+            shape is None
+            or getattr(shape, "isNull", lambda: False)()
+            or volume is None
+            or volume <= 0
+        ):
+            raise ValueError("Boolean intersection produced empty or invalid shape")
 
         return {
             "created_objects": [intersection.Name],
             "object": intersection,
             "input_objects": objects,
             "volume": volume,
+        }
+
+    # -----------------------------------------------------------------
+    # Advanced feature operations
+    # -----------------------------------------------------------------
+
+    def _extrude_from_sketch(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Extrude (pad) a sketch by a given length.
+
+        Falls back gracefully in headless/mock mode.
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("Extrude requires active FreeCAD document")
+
+        sketch_name = params["sketch"]
+        length = params.get("length", 10.0)
+        taper = params.get("taper", 0.0)
+        name = params.get("name", f"{sketch_name}_Extrude")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+
+        # Prefer PartDesign Pad when available and sketch is suitable
+        try:
+            if PartDesign and sketch.TypeId.startswith("Sketcher::SketchObject"):
+                pad = doc.addObject("PartDesign::Pad", name)
+                pad.Profile = sketch
+                pad.Length = length
+                if hasattr(pad, "TaperAngle"):
+                    pad.TaperAngle = taper
+                doc.recompute()
+                vol = getattr(getattr(pad, "Shape", None), "Volume", None)
+                return {
+                    "created_objects": [pad.Name],
+                    "object": pad,
+                    "sketch": sketch_name,
+                    "length": length,
+                    "taper": taper,
+                    "volume": vol,
+                }
+        except Exception:
+            # Fallback to Part extrusion
+            pass
+
+        # Generic Part extrusion
+        extrude = doc.addObject("Part::Extrusion", name)
+        extrude.Base = sketch
+        extrude.Dir = (0, 0, length)
+        extrude.Solid = True
+        extrude.TaperAngle = taper if hasattr(extrude, "TaperAngle") else 0.0
+        doc.recompute()
+        vol = getattr(getattr(extrude, "Shape", None), "Volume", None)
+        return {
+            "created_objects": [extrude.Name],
+            "object": extrude,
+            "sketch": sketch_name,
+            "length": length,
+            "taper": taper,
+            "volume": vol,
+        }
+
+    def _pocket_from_sketch(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a pocket (cut) from a sketch into a base solid.
+
+        Simplified implementation: extrudes sketch then performs boolean difference
+        with provided base object.
+        """
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("Pocket requires active FreeCAD document")
+
+        sketch_name = params["sketch"]
+        depth = params.get("depth", 5.0)
+        base_object = params.get("base_object")
+        name = params.get("name", f"{sketch_name}_Pocket")
+
+        if not base_object:
+            raise ValueError("base_object parameter required for pocket")
+
+        doc = App.ActiveDocument
+        sketch = doc.getObject(sketch_name)
+        base = doc.getObject(base_object)
+        if not sketch:
+            raise ValueError(f"Sketch {sketch_name} not found")
+        if not base:
+            raise ValueError(f"Base object {base_object} not found")
+
+        # Create temporary extrusion of sketch for cut profile
+        ext = doc.addObject("Part::Extrusion", f"{sketch_name}_PocketProfile")
+        ext.Base = sketch
+        ext.Dir = (0, 0, depth * -1.0)  # Negative direction by default
+        ext.Solid = True
+        doc.recompute()
+
+        # Perform cut
+        cut = doc.addObject("Part::Cut", name)
+        cut.Base = base
+        cut.Tool = ext
+        doc.recompute()
+        vol = getattr(getattr(cut, "Shape", None), "Volume", None)
+        return {
+            "created_objects": [cut.Name],
+            "object": cut,
+            "sketch": sketch_name,
+            "base_object": base_object,
+            "depth": depth,
+            "volume": vol,
+        }
+
+    def _loft_profiles(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a loft through multiple profile sketches/wires."""
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("Loft requires active FreeCAD document")
+
+        profiles = params.get("profiles", [])
+        solid = params.get("solid", True)
+        ruled = params.get("ruled", False)
+        closed = params.get("closed", False)
+        name = params.get("name", "Loft")
+
+        if len(profiles) < 2:
+            raise ValueError("Loft requires at least two profiles")
+
+        doc = App.ActiveDocument
+        objs = []
+        for p in profiles:
+            o = doc.getObject(p)
+            if not o:
+                raise ValueError(f"Profile {p} not found")
+            objs.append(o)
+
+        loft = doc.addObject("Part::Loft", name)
+        loft.Sections = objs
+        loft.Solid = solid
+        loft.Ruled = ruled
+        loft.Closed = closed
+        doc.recompute()
+        vol = getattr(getattr(loft, "Shape", None), "Volume", None)
+        return {
+            "created_objects": [loft.Name],
+            "object": loft,
+            "profiles": profiles,
+            "solid": solid,
+            "ruled": ruled,
+            "closed": closed,
+            "volume": vol,
+        }
+
+    def _sweep_profile(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Sweep a profile along a path."""
+        if not App or not App.ActiveDocument:
+            raise RuntimeError("Sweep requires active FreeCAD document")
+
+        profile = params["profile"]
+        path = params["path"]
+        name = params.get("name", f"{profile}_Sweep")
+        solid = params.get("solid", True)
+
+        doc = App.ActiveDocument
+        profile_obj = doc.getObject(profile)
+        path_obj = doc.getObject(path)
+        if not profile_obj:
+            raise ValueError(f"Profile {profile} not found")
+        if not path_obj:
+            raise ValueError(f"Path {path} not found")
+
+        sweep = doc.addObject("Part::Sweep", name)
+        sweep.Sections = [profile_obj]
+        sweep.Spine = path_obj
+        sweep.Solid = solid
+        doc.recompute()
+        vol = getattr(getattr(sweep, "Shape", None), "Volume", None)
+        return {
+            "created_objects": [sweep.Name],
+            "object": sweep,
+            "profile": profile,
+            "path": path,
+            "solid": solid,
+            "volume": vol,
         }
 
     def _add_fillet(self, params: Dict[str, Any]) -> Dict[str, Any]:
