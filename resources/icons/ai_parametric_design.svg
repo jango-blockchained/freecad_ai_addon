@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <rect x="2" y="2" width="60" height="60" rx="8" fill="#0d1b2a" stroke="#1b263b" stroke-width="2"/>
+  <path d="M12 48 C18 28 28 16 40 12" stroke="#3a86ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="24" cy="28" r="4" fill="#ffbe0b"/>
+  <circle cx="36" cy="22" r="3" fill="#fb5607"/>
+  <circle cx="30" cy="36" r="5" fill="#ff006e"/>
+  <path d="M18 50 L46 50" stroke="#415a77" stroke-width="2" stroke-linecap="round"/>
+  <text x="32" y="56" text-anchor="middle" font-size="10" fill="#adb5bd" font-family="DejaVu Sans, Arial">PARAM</text>
+</svg>
