@@ -210,6 +210,21 @@ class AIWorkbench(BaseWorkbench):
             if Gui is None or not hasattr(Gui, "addCommand"):
                 return  # Nothing to register headlessly
 
+            # Ensure our icon directory is known to FreeCAD so relative SVG names resolve.
+            try:
+                icon_dir = os.path.join(_addon_root(), "resources", "icons")
+                if os.path.isdir(icon_dir) and hasattr(Gui, "addIconPath"):
+                    # Avoid duplicates: FreeCADGui.addIconPath normally ignores if exists, but be safe.
+                    try:
+                        existing = getattr(Gui, "listIconPaths", lambda: [])()
+                    except Exception:
+                        existing = []
+                    if icon_dir not in existing:
+                        Gui.addIconPath(icon_dir)  # type: ignore[attr-defined]
+                        self._print(f"AI Workbench: Registered icon path: {icon_dir}")
+            except Exception as e:  # noqa: BLE001
+                self._print(f"AI Workbench: Could not register icon path: {e}")
+
             registered_commands = []  # collect only successfully registered commands
 
             # Core AI commands
