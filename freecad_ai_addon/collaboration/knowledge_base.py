@@ -18,6 +18,12 @@ from freecad_ai_addon.utils.logging import get_logger
 logger = get_logger("collaboration.knowledge_base")
 
 
+try:  # Optional FreeCAD context (headless-safe)
+    import FreeCAD as App  # type: ignore
+except Exception:  # pragma: no cover
+    App = None  # type: ignore
+
+
 def _kb_dir() -> Path:
     base = Path.home() / ".FreeCAD" / "ai_addon" / "collaboration"
     base.mkdir(parents=True, exist_ok=True)

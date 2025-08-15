@@ -32,6 +32,33 @@ from freecad_ai_addon.utils.logging import get_logger
 logger = get_logger("collaboration.annotations")
 
 
+try:  # Optional FreeCAD context (headless-safe)
+    import FreeCAD as App  # type: ignore
+except Exception:  # pragma: no cover
+    App = None  # type: ignore
+
+
+def _infer_document_id(provided: Optional[str]) -> str:
+    """Resolve a document identifier from provided value or active FreeCAD doc.
+
+    Falls back to a stable placeholder when neither is available.
+    """
+    if provided:
+        return provided
+    try:
+        if App and getattr(App, "ActiveDocument", None):
+            doc = App.ActiveDocument
+            file_path = getattr(doc, "FileName", None)
+            if file_path:
+                return str(file_path)
+            name = getattr(doc, "Name", None)
+            if name:
+                return str(name)
+    except Exception:  # noqa: BLE001
+        pass
+    return "ActiveDocument"
+
+
 def _get_base_dir() -> Path:
     # Avoid importing FreeCAD (headless tests) – just reuse ~/.FreeCAD
     home = Path.home()
@@ -122,26 +149,29 @@ class DesignReviewManager:
 
     def create_annotation(
         self,
-        document_id: str,
+        document_id: Optional[str],
         author: str,
         message: str,
         **kwargs,
     ) -> Annotation:
-        ann = Annotation.create(document_id, author, message, **kwargs)
+        resolved_id = _infer_document_id(document_id)
+        ann = Annotation.create(resolved_id, author, message, **kwargs)
         return self.add_annotation(ann)
 
     def list_annotations(
-        self, document_id: str, category: str | None = None
+        self, document_id: Optional[str], category: str | None = None
     ) -> List[Annotation]:
-        anns = self._load(document_id)
+        resolved_id = _infer_document_id(document_id)
+        anns = self._load(resolved_id)
         if category:
             return [a for a in anns if a.category == category]
         return list(anns)
 
-    def to_dict(self, document_id: str) -> Dict[str, Any]:
-        anns = self._load(document_id)
+    def to_dict(self, document_id: Optional[str]) -> Dict[str, Any]:
+        resolved_id = _infer_document_id(document_id)
+        anns = self._load(resolved_id)
         return {
-            "document_id": document_id,
+            "document_id": resolved_id,
             "count": len(anns),
             "annotations": [asdict(a) for a in anns],
         }

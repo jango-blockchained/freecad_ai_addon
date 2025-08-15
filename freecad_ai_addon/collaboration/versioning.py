@@ -17,6 +17,29 @@ from freecad_ai_addon.utils.logging import get_logger
 logger = get_logger("collaboration.versioning")
 
 
+try:  # Optional FreeCAD context (headless-safe)
+    import FreeCAD as App  # type: ignore
+except Exception:  # pragma: no cover
+    App = None  # type: ignore
+
+
+def _infer_document_id(provided: Optional[str]) -> str:
+    if provided:
+        return provided
+    try:
+        if App and getattr(App, "ActiveDocument", None):
+            doc = App.ActiveDocument
+            file_path = getattr(doc, "FileName", None)
+            if file_path:
+                return str(file_path)
+            name = getattr(doc, "Name", None)
+            if name:
+                return str(name)
+    except Exception:  # noqa: BLE001
+        pass
+    return "ActiveDocument"
+
+
 def _base_dir() -> Path:
     base = Path.home() / ".FreeCAD" / "ai_addon" / "collaboration" / "versions"
     base.mkdir(parents=True, exist_ok=True)
@@ -69,13 +92,17 @@ class VersionManager:
             logger.error("Save versions failed for %s: %s", document_id, e)
 
     def create_version(
-        self, document_id: str, summary: str, metadata: Optional[Dict[str, Any]] = None
+        self,
+        document_id: Optional[str],
+        summary: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> VersionSnapshot:
-        snaps = self._load(document_id)
+        resolved_id = _infer_document_id(document_id)
+        snaps = self._load(resolved_id)
         parent = snaps[-1].version_id if snaps else None
         version_id = f"v{len(snaps)+1:03d}"
         snap = VersionSnapshot(
-            document_id=document_id,
+            document_id=resolved_id,
             version_id=version_id,
             created_at=datetime.utcnow().isoformat(),
             summary=summary,
@@ -83,22 +110,25 @@ class VersionManager:
             parent_version=parent,
         )
         snaps.append(snap)
-        self._cache[document_id] = snaps
-        self._save(document_id)
-        logger.debug("Created version %s for %s", version_id, document_id)
+        self._cache[resolved_id] = snaps
+        self._save(resolved_id)
+        logger.debug("Created version %s for %s", version_id, resolved_id)
         return snap
 
-    def list_versions(self, document_id: str) -> List[VersionSnapshot]:
-        return list(self._load(document_id))
+    def list_versions(self, document_id: Optional[str]) -> List[VersionSnapshot]:
+        resolved_id = _infer_document_id(document_id)
+        return list(self._load(resolved_id))
 
-    def latest_version(self, document_id: str) -> Optional[VersionSnapshot]:
-        snaps = self._load(document_id)
+    def latest_version(self, document_id: Optional[str]) -> Optional[VersionSnapshot]:
+        resolved_id = _infer_document_id(document_id)
+        snaps = self._load(resolved_id)
         return snaps[-1] if snaps else None
 
-    def to_dict(self, document_id: str) -> Dict[str, Any]:
-        snaps = self._load(document_id)
+    def to_dict(self, document_id: Optional[str]) -> Dict[str, Any]:
+        resolved_id = _infer_document_id(document_id)
+        snaps = self._load(resolved_id)
         return {
-            "document_id": document_id,
+            "document_id": resolved_id,
             "count": len(snaps),
             "versions": [asdict(s) for s in snaps],
         }

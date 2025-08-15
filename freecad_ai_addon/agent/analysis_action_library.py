@@ -35,15 +35,15 @@ class AnalysisActionLibrary:
     """
 
     def __init__(self):
-        """Initialize the analysis action library"""
+        """Initialize the analysis action library."""
         self.logger = logging.getLogger(f"{__name__}.AnalysisActionLibrary")
-        self.analysis_history = []
+        self.analysis_history: List[Dict[str, Any]] = []
         # Caches
         self._mass_properties_cache: Dict[str, Dict[str, Any]] = {}
         self._wall_sample_cache: Dict[str, Dict[str, Any]] = {}
 
         # Analysis operation registry
-        self.analysis_operations = {
+        self.analysis_operations: Dict[str, Any] = {
             # Geometric analysis
             "geometric_properties": self.analyze_geometric_properties,
             "mass_properties": self.analyze_mass_properties,
